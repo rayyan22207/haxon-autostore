@@ -1,6 +1,6 @@
 <script setup>
 import HeroSection from '../components/home/HeroSection.vue'
-// import VehicleFinder from '../components/home/VehicleFinder.vue'
+import VehicleFinder from '../components/home/VehicleFinder.vue'
 // import FeaturedCollections from '../components/home/FeaturedCollections.vue'
 import BrandStrip from '../components/home/BrandStrip.vue'
 import FeaturedProducts from '../components/home/FeaturedProducts.vue'
@@ -12,7 +12,7 @@ import FeaturedProducts from '../components/home/FeaturedProducts.vue'
 <template>
   <div class="bg-[#F6F6F4] text-[#121212] overflow-hidden">
     <HeroSection />
-    <!-- <VehicleFinder /> -->
+    <VehicleFinder />
     <!-- <FeaturedCollections /> -->
     <!-- <BrandStrip />
     <FeaturedProducts /> -->
