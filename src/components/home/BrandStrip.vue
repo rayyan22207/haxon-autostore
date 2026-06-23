@@ -1,6 +1,6 @@
 <script setup>
-const brands = [
-  { name: 'Toyota', logo: '/brands/toyota.svg' },
+const brands = [ 
+  { name: 'Toyota', logo: 'src/assets/toyota.png' },
   { name: 'Honda', logo: '/brands/honda.svg' },
   { name: 'Suzuki', logo: '/brands/suzuki.svg' },
   { name: 'Kia', logo: '/brands/kia.svg' },

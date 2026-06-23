@@ -28,50 +28,62 @@ const featuredProducts = computed(() =>
 </script>
 
 <template>
-  <section class="relative bg-[#F4F1EC] py-20 overflow-hidden">
+  <section class="relative overflow-hidden bg-[#030303] py-12 text-white sm:py-14 lg:py-16">
+    <!-- Soft red glow -->
+    <div class="pointer-events-none absolute -right-32 -top-40 h-96 w-96 rounded-full bg-[#d90429]/20 blur-[120px]"></div>
+
+    <!-- Subtle grid -->
     <div
-      class="absolute inset-0 opacity-[0.035]"
+      class="pointer-events-none absolute inset-0 opacity-[0.025]"
       style="
         background-image:
-          linear-gradient(90deg, #000 1px, transparent 1px),
-          linear-gradient(#000 1px, transparent 1px);
-        background-size: 38px 38px;
+          linear-gradient(rgba(255,255,255,.18) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255,255,255,.18) 1px, transparent 1px);
+        background-size: 44px 44px;
       "
     ></div>
 
-    <div class="relative max-w-7xl mx-auto px-6">
-      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-10">
-        <div>
-          <div class="flex items-center gap-3 mb-3">
-            <span class="w-10 h-px bg-[#D90429]"></span>
+    <!-- Top shine -->
+    <div class="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
 
-            <p class="uppercase tracking-[0.34em] text-[#777] text-[11px] font-semibold">
-              Featured Picks
+    <div class="relative mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
+      <!-- Header -->
+      <div class="mb-8 flex flex-col gap-6 sm:mb-10 lg:flex-row lg:items-end lg:justify-between">
+        <div class="max-w-3xl">
+          <div class="mb-4 flex items-center gap-3">
+            <span class="h-px w-8 bg-[#d90429]"></span>
+
+            <p class="text-[10px] font-black uppercase tracking-[0.32em] text-white/45">
+              Featured Collection
             </p>
           </div>
 
-          <h2 class="text-3xl md:text-5xl font-black text-[#121212] tracking-tight">
-            Built for the road.
+          <h2 class="text-4xl font-black leading-[0.9] tracking-[-0.06em] sm:text-5xl lg:text-6xl">
+            Built to make
+            <span class="text-[#d90429]">everyday</span>
+            drives sharper.
           </h2>
 
-          <p class="text-[#666] mt-4 max-w-2xl leading-relaxed">
-            Selected accessories that make your car look cleaner, feel sharper,
-            and stay ready for daily use.
+          <p class="mt-4 max-w-xl text-sm leading-6 text-white/55">
+            Clean upgrades, useful accessories, and small details that make the car feel properly finished.
           </p>
         </div>
 
         <router-link
           to="/products"
-          class="inline-flex items-center justify-center bg-[#121212] hover:bg-[#D90429] text-white px-6 py-3 rounded-2xl font-bold transition shadow-xl shadow-black/10"
+          class="group inline-flex w-fit items-center rounded-full border border-white/10 bg-white/[0.04] px-5 py-2.5 text-[10px] font-black uppercase tracking-[0.18em] text-white/75 transition duration-300 hover:border-[#d90429]/70 hover:bg-[#d90429] hover:text-white"
         >
-          View All Products
-          <span class="ml-2">→</span>
+          View all
+          <span class="ml-3 transition-transform duration-300 group-hover:translate-x-1">
+            →
+          </span>
         </router-link>
       </div>
 
+      <!-- Products -->
       <div
         v-if="featuredProducts.length"
-        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+        class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
       >
         <ProductCard
           v-for="product in featuredProducts"
@@ -80,20 +92,21 @@ const featuredProducts = computed(() =>
         />
       </div>
 
+      <!-- Empty -->
       <div
         v-else
-        class="bg-white/70 border border-black/5 rounded-3xl p-12 text-center shadow-xl shadow-black/5"
+        class="rounded-2xl border border-white/10 bg-white/[0.035] px-6 py-12 text-center shadow-2xl shadow-black/30 backdrop-blur"
       >
-        <div class="text-5xl mb-4">
-          🏁
-        </div>
+        <p class="text-[10px] font-black uppercase tracking-[0.32em] text-[#d90429]">
+          Empty Garage
+        </p>
 
-        <h3 class="text-2xl font-black text-[#121212]">
-          No featured products yet
+        <h3 class="mt-3 text-3xl font-black tracking-[-0.05em]">
+          No featured products yet.
         </h3>
 
-        <p class="text-[#666] mt-2">
-          Mark products as featured from the admin panel.
+        <p class="mx-auto mt-3 max-w-md text-sm leading-6 text-white/50">
+          Mark products as featured from the admin panel and they’ll appear here.
         </p>
       </div>
     </div>
