@@ -1,4 +1,5 @@
 <script setup>
+import { toast } from 'vue-sonner'
 import { ref, computed, onMounted } from 'vue'
 import {
   collection,
@@ -150,7 +151,7 @@ const removeProduct = async (product) => {
     await fetchProducts()
   } catch (err) {
     console.error(err)
-    alert('Failed to delete product.')
+    toast.error('Failed to delete product.')
   }
 }
 

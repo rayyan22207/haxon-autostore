@@ -17,6 +17,8 @@ import Orders from '../pages/admin/Orders.vue'
 import AdminProducts from '../pages/admin/Products.vue'
 import EditProduct from '../pages/admin/EditProduct.vue'
 import OrderDetails from '../pages/admin/OrderDetails.vue'
+import Content from '../pages/admin/Content.vue'
+import AdminAccessDenied from '../components/admin/AdminAccessDenied.vue'
 
 const routes = [
   { path: '/', component: Home },
@@ -28,12 +30,16 @@ const routes = [
   { path: '/track-order', component: TrackOrder },
   { path: '/brands', component: Brands },
   { path: '/admin/login', component: Login },
+  { path: '/admin/access-denied', component: AdminAccessDenied, meta: { requiresAuthOnly: true } },
+  { path: '/admin/forbidden', component: AdminAccessDenied, props: { mode: 'permission' }, meta: { requiresAdmin: true } },
   { path: '/admin', component: Dashboard, meta: { requiresAdmin: true } },
-  { path: '/admin/products/add', component: AddProduct, meta: { requiresAdmin: true } },
-  { path: '/admin/orders', component: Orders, meta: { requiresAdmin: true } },
-  { path: '/admin/orders/:id', component: OrderDetails, meta: { requiresAdmin: true } },
-  { path: '/admin/products', component: AdminProducts, meta: { requiresAdmin: true } },
-  { path: '/admin/products/edit/:id', component: EditProduct, meta: { requiresAdmin: true } },
+  { path: '/admin/products/add', component: AddProduct, meta: { requiresAdmin: true, permission: 'manage_products' } },
+  { path: '/admin/orders', component: Orders, meta: { requiresAdmin: true, permission: 'manage_orders' } },
+  { path: '/admin/orders/:id', component: OrderDetails, meta: { requiresAdmin: true, permission: 'manage_orders' } },
+  { path: '/admin/products', component: AdminProducts, meta: { requiresAdmin: true, permission: 'manage_products' } },
+  { path: '/admin/products/edit/:id', component: EditProduct, meta: { requiresAdmin: true, permission: 'manage_products' } },
+  { path: '/admin/content', component: Content, meta: { requiresAdmin: true, permission: 'manage_content' } },
+  { path: '/admin/content/:section', component: Content, meta: { requiresAdmin: true, permission: 'manage_content' } },
 ]
 
 const router = createRouter({ history: createWebHistory(), routes })
@@ -41,8 +47,12 @@ const router = createRouter({ history: createWebHistory(), routes })
 router.beforeEach(async (to) => {
   const authStore = useAuthStore()
   await authStore.waitUntilReady()
+  if (to.meta.requiresAuthOnly && !authStore.isAuthenticated) return { path: '/admin/login' }
   if (to.meta.requiresAdmin && !authStore.isAuthenticated) return { path: '/admin/login', query: { redirect: to.fullPath } }
-  if (to.path === '/admin/login' && authStore.isAuthenticated) return '/admin'
+  if (to.meta.requiresAdmin && !authStore.isAdmin) return { path: '/admin/access-denied' }
+  if (to.meta.permission && !authStore.hasPermission(to.meta.permission)) return { path: '/admin/forbidden' }
+  if (to.path === '/admin/login' && authStore.isAdmin) return '/admin'
+  if (to.path === '/admin/login' && authStore.isAuthenticated && !authStore.isAdmin) return '/admin/access-denied'
 })
 
 export default router

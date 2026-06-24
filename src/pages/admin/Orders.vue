@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import { toast } from 'vue-sonner'
 import { collection, getDocs, doc, updateDoc, query, orderBy, serverTimestamp } from 'firebase/firestore'
 import { db } from '../../firebase/config'
 import { buildTimelineEntry, formatPrice, orderStatus, orderTotal, orderStatuses, normalizePaymentStatus } from '../../lib/catalog'
@@ -11,7 +12,7 @@ const getOrderItems = (order) => order.items || order.products || []
 const fetchOrders = async () => { loading.value = true; error.value = ''; try { const snap = await getDocs(query(collection(db, 'orders'), orderBy('createdAt', 'desc'))); orders.value = snap.docs.map((d) => ({ id: d.id, ...d.data() })) } catch (err) { console.error(err); error.value = 'Failed to load orders.' } finally { loading.value = false } }
 const filteredOrders = computed(() => { const term = search.value.toLowerCase().trim(); return orders.value.filter((order) => { const text = [order.customer?.name, order.customerName, order.customer?.phone, order.phone, order.customer?.city, order.city, order.orderNumber, order.id, orderStatus(order), normalizePaymentStatus(order.paymentStatus)].join(' ').toLowerCase(); return (!term || text.includes(term)) && (!selectedStatus.value || orderStatus(order) === selectedStatus.value) }) })
 const stats = computed(() => ({ total: orders.value.length, pending: orders.value.filter((o) => orderStatus(o) === 'Pending').length, delivered: orders.value.filter((o) => orderStatus(o) === 'Delivered').length, cancelled: orders.value.filter((o) => orderStatus(o) === 'Cancelled').length, revenue: orders.value.filter((o) => orderStatus(o) === 'Delivered').reduce((sum, o) => sum + orderTotal(o), 0) }))
-const updateStatus = async (order, status) => { updatingOrderId.value = order.id; error.value = ''; try { const timeline = [...(order.timeline || []), buildTimelineEntry(status, `Admin updated status from ${orderStatus(order)} to ${status}`)]; await updateDoc(doc(db, 'orders', order.id), { orderStatus: status, status, timeline, updatedAt: serverTimestamp() }); orders.value = orders.value.map((o) => (o.id === order.id ? { ...o, orderStatus: status, status, timeline } : o)) } catch (err) { console.error(err); error.value = 'Failed to update order status.' } finally { updatingOrderId.value = '' } }
+const updateStatus = async (order, status) => { updatingOrderId.value = order.id; error.value = ''; try { const timeline = [...(order.timeline || []), buildTimelineEntry(status, `Admin updated status from ${orderStatus(order)} to ${status}`)]; await updateDoc(doc(db, 'orders', order.id), { orderStatus: status, status, timeline, updatedAt: serverTimestamp() }); orders.value = orders.value.map((o) => (o.id === order.id ? { ...o, orderStatus: status, status, timeline } : o)); toast.success('Order status updated') } catch (err) { console.error(err); error.value = 'Failed to update order status.'; toast.error(error.value) } finally { updatingOrderId.value = '' } }
 const clearFilters = () => { search.value = ''; selectedStatus.value = '' }
 onMounted(fetchOrders)
 </script>

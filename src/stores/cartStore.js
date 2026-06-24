@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { toast } from 'vue-sonner'
 
 export const useCartStore = defineStore('cart', {
   state: () => ({
@@ -24,11 +25,13 @@ export const useCartStore = defineStore('cart', {
 
       if (existing) {
         existing.quantity++
+        toast.success('Cart quantity updated')
       } else {
         this.items.push({
           ...product,
           quantity: 1,
         })
+        toast.success('Added to cart')
       }
     },
 
@@ -36,6 +39,7 @@ export const useCartStore = defineStore('cart', {
       this.items = this.items.filter(
         item => item.id !== id
       )
+      toast.success('Removed from cart')
     },
 
     increaseQuantity(id) {
@@ -45,6 +49,7 @@ export const useCartStore = defineStore('cart', {
 
       if (item) {
         item.quantity++
+        toast.success('Cart quantity updated')
       }
     },
 
@@ -55,6 +60,7 @@ export const useCartStore = defineStore('cart', {
 
       if (item && item.quantity > 1) {
         item.quantity--
+        toast.success('Cart quantity updated')
       }
     },
 

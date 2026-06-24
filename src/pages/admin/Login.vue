@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { toast } from 'vue-sonner'
 import { useAuthStore } from '../../stores/authStore'
 
 const router = useRouter()
@@ -23,6 +24,7 @@ const isValid = computed(() => {
 const handleLogin = async () => {
   if (!isValid.value) {
     error.value = 'Please enter a valid email and password.'
+    toast.error(error.value)
     return
   }
 
@@ -34,11 +36,18 @@ const handleLogin = async () => {
       email.value.trim(),
       password.value
     )
-
+    if (!authStore.isAdmin) {
+      error.value = 'This account is not an active Haxon admin.'
+      toast.error('Access denied')
+      router.push('/admin/access-denied')
+      return
+    }
+    toast.success('Admin login successful')
     router.push('/admin')
   } catch (err) {
     console.error(err)
     error.value = 'Invalid email or password.'
+    toast.error(error.value)
   } finally {
     loading.value = false
   }
@@ -46,23 +55,23 @@ const handleLogin = async () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50 flex items-center justify-center px-6">
+  <div class="admin-shell flex min-h-screen items-center justify-center px-6">
     <div class="w-full max-w-md">
       <div class="text-center mb-8">
         <div class="w-16 h-16 bg-red-600 rounded-2xl mx-auto flex items-center justify-center text-white text-2xl font-bold shadow">
           H
         </div>
 
-        <h1 class="text-4xl font-bold text-gray-900 mt-5">
+        <h1 class="text-4xl font-bold text-white mt-5">
           Haxon Admin
         </h1>
 
-        <p class="text-gray-500 mt-2">
+        <p class="text-white/55 mt-2">
           Sign in to manage products, orders, and store settings.
         </p>
       </div>
 
-      <div class="bg-white border shadow-sm rounded-3xl p-8">
+      <div class="admin-card border shadow-sm rounded-3xl p-8">
         <div
           v-if="error"
           class="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-sm mb-5"
@@ -75,7 +84,7 @@ const handleLogin = async () => {
           @submit.prevent="handleLogin"
         >
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
+            <label class="block text-sm font-medium text-white/80 mb-2">
               Email Address
             </label>
 
@@ -84,12 +93,12 @@ const handleLogin = async () => {
               type="email"
               autocomplete="email"
               placeholder="admin@haxon.store"
-              class="w-full border rounded-xl p-3 focus:ring-2 focus:ring-red-500 outline-none"
+              class="admin-input focus:ring-2 focus:ring-red-500 outline-none"
             />
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
+            <label class="block text-sm font-medium text-white/80 mb-2">
               Password
             </label>
 
@@ -99,13 +108,13 @@ const handleLogin = async () => {
                 :type="showPassword ? 'text' : 'password'"
                 autocomplete="current-password"
                 placeholder="Enter password"
-                class="w-full border rounded-xl p-3 pr-24 focus:ring-2 focus:ring-red-500 outline-none"
+                class="admin-input pr-24 focus:ring-2 focus:ring-red-500 outline-none"
               />
 
               <button
                 type="button"
                 @click="showPassword = !showPassword"
-                class="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500 hover:text-red-600"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-white/55 hover:text-red-600"
               >
                 {{ showPassword ? 'Hide' : 'Show' }}
               </button>
@@ -121,7 +130,7 @@ const handleLogin = async () => {
           </button>
         </form>
 
-        <div class="mt-6 border-t pt-5 text-sm text-gray-500">
+        <div class="mt-6 border-t pt-5 text-sm text-white/55">
           Firebase Auth handles the session securely. No password is stored in the app.
         </div>
       </div>

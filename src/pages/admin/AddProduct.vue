@@ -1,4 +1,5 @@
 <script setup>
+import { toast } from 'vue-sonner'
 import { ref, computed, watch } from 'vue'
 import {
   addDoc,
@@ -155,7 +156,7 @@ const handleImage = (event) => {
   ]
 
   if (!allowedTypes.includes(file.type)) {
-    alert(
+    toast.error(
       'Please upload JPG, PNG or WEBP.'
     )
 
@@ -163,7 +164,7 @@ const handleImage = (event) => {
   }
 
   if (file.size > 5 * 1024 * 1024) {
-    alert(
+    toast.error(
       'Maximum image size is 5MB.'
     )
 
@@ -221,7 +222,7 @@ const resetForm = () => {
 
 const saveProduct = async () => {
   if (!isValid.value) {
-    alert(
+    toast.error(
       'Please complete all required fields.'
     )
 
@@ -303,7 +304,7 @@ const saveProduct = async () => {
       }
     )
 
-    alert(
+    toast.success(
       'Product created successfully.'
     )
 
@@ -311,7 +312,7 @@ const saveProduct = async () => {
   } catch (err) {
     console.error(err)
 
-    alert(
+    toast.error(
       err.message ??
         'Failed to save product.'
     )
