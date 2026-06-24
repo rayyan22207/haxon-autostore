@@ -1,0 +1,32 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function adminDoc() { return get(/databases/$(database)/documents/adminUsers/$(request.auth.uid)); }
+    function isActiveAdmin() { return signedIn() && exists(/databases/$(database)/documents/adminUsers/$(request.auth.uid)) && adminDoc().data.active == true; }
+    function hasPermission(permission) {
+      return isActiveAdmin() && (
+        adminDoc().data.role == 'super_admin' ||
+        (permission in adminDoc().data.permissions) ||
+        (adminDoc().data.role == 'admin' && permission in ['manage_products','manage_orders','manage_content']) ||
+        (adminDoc().data.role == 'catalog_manager' && permission == 'manage_products') ||
+        (adminDoc().data.role == 'order_manager' && permission == 'manage_orders') ||
+        (adminDoc().data.role == 'content_manager' && permission == 'manage_content')
+      );
+    }
+    function smallString(field, max) { return !(field in request.resource.data) || (request.resource.data[field] is string && request.resource.data[field].size() <= max); }
+    function safeContent() { return request.resource.data.keys().size() <= 40 && smallString('title', 160) && smallString('name', 120) && smallString('description', 1200) && smallString('subtitle', 1200) && smallString('image', 1200) && (!('active' in request.resource.data) || request.resource.data.active is bool) && (!('sortOrder' in request.resource.data) || request.resource.data.sortOrder is number); }
+
+    // Public storefront reads only published/active catalog and content. Frontend role checks are UX only; these rules are the server-side authority.
+    match /products/{id} { allow read: if resource.data.active != false && resource.data.isActive != false || hasPermission('manage_products'); allow write: if hasPermission('manage_products'); }
+    match /orders/{id} { allow create: if true; allow read, update, delete: if hasPermission('manage_orders'); }
+    match /adminUsers/{uid} { allow read: if signedIn() && request.auth.uid == uid || hasPermission('manage_admins'); allow write: if hasPermission('manage_admins'); }
+    match /siteSettings/{id} { allow read: if true; allow write: if hasPermission('manage_content') && safeContent(); }
+    match /signatureShowcase/{id} { allow read: if true; allow write: if hasPermission('manage_content') && safeContent(); }
+    match /heroSlides/{id} { allow read: if true; allow write: if hasPermission('manage_content') && safeContent(); }
+    match /categoryTiles/{id} { allow read: if true; allow write: if hasPermission('manage_content') && safeContent(); }
+    match /brandTiles/{id} { allow read: if true; allow write: if hasPermission('manage_content') && safeContent(); }
+    match /trustItems/{id} { allow read: if true; allow write: if hasPermission('manage_content') && safeContent(); }
+    match /{document=**} { allow read, write: if false; }
+  }
+}

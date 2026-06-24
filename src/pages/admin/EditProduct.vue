@@ -1,4 +1,5 @@
 <script setup>
+import { toast } from 'vue-sonner'
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -174,9 +175,9 @@ const loadProduct = async () => {
     const snap = await getDoc(docRef)
 
     if (!snap.exists()) {
-      alert('Product not found.')
+      toast.error('Product not found.')
 
-      router.push('/admin/products')
+      toast.success('Product saved'); router.push('/admin/products')
 
       return
     }
@@ -247,7 +248,7 @@ const loadProduct = async () => {
   } catch (err) {
     console.error(err)
 
-    alert(
+    toast.error(
       'Failed to load product.'
     )
   } finally {
@@ -272,7 +273,7 @@ const handleImage = (event) => {
       file.type
     )
   ) {
-    alert(
+    toast.error(
       'Please upload JPG, PNG or WEBP.'
     )
 
@@ -283,7 +284,7 @@ const handleImage = (event) => {
     file.size >
     5 * 1024 * 1024
   ) {
-    alert(
+    toast.error(
       'Maximum image size is 5MB.'
     )
 
@@ -325,7 +326,7 @@ const clearSelectedImage =
 const saveProduct =
   async () => {
     if (!isValid.value) {
-      alert(
+      toast.error(
         'Please complete all required fields.'
       )
 
@@ -424,17 +425,18 @@ const saveProduct =
         }
       )
 
-      alert(
+      toast.success(
         'Product updated successfully.'
       )
 
+      toast.success('Product saved')
       router.push(
         '/admin/products'
       )
     } catch (err) {
       console.error(err)
 
-      alert(
+      toast.error(
         err.message ||
           'Failed to update product.'
       )
@@ -453,7 +455,7 @@ onMounted(() => {
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
         <div>
           <button
-            @click="router.push('/admin/products')"
+            @click="toast.success('Product saved'); router.push('/admin/products')"
             class="text-sm text-slate-400 hover:text-red-600 mb-3"
           >
             ← Back to products
@@ -477,7 +479,7 @@ onMounted(() => {
           </button>
 
           <button
-            @click="router.push('/admin/products')"
+            @click="toast.success('Product saved'); router.push('/admin/products')"
             class="admin-btn-secondary"
           >
             Cancel
@@ -968,7 +970,7 @@ onMounted(() => {
             </button>
 
             <button
-              @click="router.push('/admin/products')"
+              @click="toast.success('Product saved'); router.push('/admin/products')"
               class="admin-btn-secondary w-full mt-3"
             >
               Cancel

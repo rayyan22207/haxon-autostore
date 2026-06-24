@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue'
+import { toast } from 'vue-sonner'
 import { collection, getDocs, limit, query, where } from 'firebase/firestore'
 import { db } from '../firebase/config'
 import OrderStatusBadge from '../components/OrderStatusBadge.vue'
@@ -24,7 +25,7 @@ const phoneMatches = (order, normalized) => {
 const track = async () => {
   const number = orderNumber.value.trim()
   const normalized = normalizePhone(phone.value)
-  if (!number && !normalized) { error.value = 'Enter an order number, phone number, or both.'; return }
+  if (!number && !normalized) { error.value = 'Enter an order number, phone number, or both.'; toast.error(error.value); return }
   loading.value = true; error.value = ''; results.value = []; selectedId.value = ''
   try {
     const found = []
@@ -40,8 +41,8 @@ const track = async () => {
     else if (normalized) merged = merged.filter((o) => phoneMatches(o, normalized))
     results.value = merged
     if (merged.length === 1) selectedId.value = merged[0].id
-    if (!merged.length) error.value = 'No matching order found. Check the order number or phone format and try again.'
-  } catch (err) { console.error(err); error.value = 'Unable to check Firestore right now. Please try again or contact Haxon.' }
+    if (!merged.length) { error.value = 'No matching order found. Check the order number or phone format and try again.'; toast.warning('No matching order found') } else { toast.success('Order found') }
+  } catch (err) { console.error(err); error.value = 'Unable to check Firestore right now. Please try again or contact Haxon.'; toast.error('Tracking lookup failed') }
   finally { loading.value = false }
 }
 </script>

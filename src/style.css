@@ -86,3 +86,19 @@ a {
 .admin-table { width: 100%; border-collapse: collapse; color: #e5e7eb; }
 .admin-table th { background: rgba(255,255,255,.06); color: rgba(226,232,240,.72); font-size: .75rem; text-transform: uppercase; letter-spacing: .14em; text-align: left; padding: 1rem; }
 .admin-table td { border-top: 1px solid rgba(255,255,255,.08); padding: 1rem; vertical-align: middle; }
+.nav-pill { border-radius: 999px; padding: .55rem 1rem; font-size: .75rem; font-weight: 900; text-transform: uppercase; letter-spacing: .16em; color: rgba(255,255,255,.68); transition: color .2s, background .2s, box-shadow .2s, transform .2s; }
+.nav-pill:hover { background: rgba(255,255,255,.10); color: #fff; }
+.nav-pill:focus-visible, .nav-mobile-pill:focus-visible, .icon-pill:focus-visible { outline: 2px solid rgba(239,68,68,.9); outline-offset: 3px; }
+.nav-pill-active { background: rgba(255,255,255,.12) !important; color: #fff !important; box-shadow: inset 0 -2px 0 #e50914, 0 10px 30px rgba(0,0,0,.18); }
+.nav-mobile-pill { display: block; border-radius: 1rem; padding: .85rem 1rem; font-size: .875rem; font-weight: 900; text-transform: uppercase; letter-spacing: .16em; color: rgba(255,255,255,.72); transition: background .2s, color .2s; }
+.nav-mobile-pill:hover { background: rgba(255,255,255,.10); color: #fff; }
+.icon-pill { display: flex; height: 2.75rem; width: 2.75rem; align-items: center; justify-content: center; border-radius: 999px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.055); transition: background .2s, color .2s, transform .2s; }
+.icon-pill:hover { background: rgba(255,255,255,.14); color: #fff; transform: translateY(-1px); }
+.glass-strip { border: 1px solid rgba(255,255,255,.11); background: rgba(255,255,255,.055); border-radius: 1.5rem; padding: 1rem; box-shadow: 0 24px 70px rgba(0,0,0,.24); backdrop-filter: blur(22px); }
+.reveal-build { opacity: 0; transform: translateY(22px); filter: blur(6px); transition: opacity .7s ease, transform .7s ease, filter .7s ease; }
+.reveal-build.is-visible { opacity: 1; transform: translateY(0); filter: blur(0); }
+.reveal-card { animation: soft-rise .7s both; }
+@keyframes soft-rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+.admin-card { backdrop-filter: blur(22px); background: rgba(15,23,42,.62); }
+.sonner-toast, [data-sonner-toast] { background: rgba(8,10,14,.84) !important; border: 1px solid rgba(255,255,255,.12) !important; backdrop-filter: blur(20px); }
+@media (prefers-reduced-motion: reduce) { .reveal-build, .reveal-card, * { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; } .reveal-build { opacity: 1; transform: none; filter: none; } }

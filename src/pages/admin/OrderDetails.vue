@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import { toast } from 'vue-sonner'
 import { useRoute } from 'vue-router'
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '../../firebase/config'
@@ -58,8 +59,8 @@ const save = async () => {
     }
     await updateDoc(doc(db, 'orders', order.value.id), updateData)
     order.value = { ...order.value, ...updateData }
-    message.value = 'Order updates saved to Firestore.'
-  } catch (err) { console.error(err); error.value = 'Failed to save order updates. Please try again.' }
+    message.value = 'Order updates saved to Firestore.'; toast.success('Order updated')
+  } catch (err) { console.error(err); error.value = 'Failed to save order updates. Please try again.'; toast.error(error.value) }
   finally { saving.value = false }
 }
 
