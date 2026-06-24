@@ -17,7 +17,7 @@ const logout = async () => { await auth.logout(); toast.success('Admin signed ou
 </script>
 <template>
   <header class="fixed left-0 right-0 top-0 z-50 px-3 pt-3 text-white sm:px-5 sm:pt-5">
-    <nav class="mx-auto max-w-7xl rounded-[1.6rem] border border-white/15 bg-[#090B0F]/60 shadow-2xl shadow-black/35 backdrop-blur-2xl ring-1 ring-white/5">
+    <nav class="mx-auto max-w-7xl glass-nav rounded-[1.6rem]">
       <div class="flex items-center justify-between px-4 py-3 sm:px-5">
         <router-link :to="isAdmin ? '/admin' : '/'" class="leading-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-red-400" @click="closeMobileMenu"><span class="block text-2xl font-black tracking-[0.24em] md:text-3xl">HAXON</span><span class="mt-1 block text-[9px] font-black uppercase tracking-[0.42em] text-[#E50914]">{{ isAdmin ? 'Control Panel' : 'Autostore' }}</span></router-link>
         <div class="hidden items-center rounded-full border border-white/10 bg-white/[.045] p-1 lg:flex">
