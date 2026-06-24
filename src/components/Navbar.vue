@@ -13,8 +13,8 @@ const isAdmin = computed(() => route.path.startsWith('/admin'))
 const storeLinks = [
   { label: 'Home', to: '/' },
   { label: 'Shop', to: '/products' },
-  { label: 'Collections', to: '/products' },
-  { label: 'Brands', to: '/products' },
+  { label: 'Track', to: '/track-order' },
+  { label: 'Brands', to: '/brands' },
   { label: 'Contact', to: '/contact' },
 ]
 
@@ -57,7 +57,7 @@ const isActive = (path) => {
           </router-link>
 
           <router-link
-            to="/cart"
+            to="/track-order"
             class="text-white/55 transition hover:text-white"
           >
             Track Order
