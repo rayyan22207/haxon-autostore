@@ -14,7 +14,7 @@ import 'vue-sonner/style.css'
     <Navbar />
 
     <main class="flex-1">
-      <RouterView />
+      <!-- <RouterView /> -->
     </main>
 
     <Footer />

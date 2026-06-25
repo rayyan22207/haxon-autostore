@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useContentStore } from '../../stores/contentStore'
-import fallbackHero from '../../assets/hero.png'
+import fallbackHero from '../../assets/testing_2.png'
 
 const content = useContentStore()
 const active = ref(0)
