@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useCartStore } from '../../stores/cartStore'
 import { formatPrice, productBrand, productImage } from '../../lib/catalog'
+import HaxonImage from './HaxonImage.vue'
 
 const props = defineProps({
   product: {
@@ -60,12 +61,7 @@ const addProduct = () => {
         ></div>
 
         <div class="absolute inset-1 flex items-center justify-center">
-  <img
-    :src="productImage(product)"
-    :alt="product.name"
-    class="relative aspect-square overflow-hidden border-b border-white/10 bg-[#07080a]"
-    @error="$event.target.src='/image/products/no-image.jpeg'"
-  />
+  <HaxonImage :src="productImage(product)" :alt="product.imageAlt || product.name" fit="contain" ratio="h-full w-full" img-class="p-2" />
 </div>
 
         <div

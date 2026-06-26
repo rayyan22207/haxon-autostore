@@ -3,80 +3,7 @@ import { onMounted, ref } from 'vue'
 import { collection, getDocs } from 'firebase/firestore'
 import { db } from '../firebase/config'
 
-const fallbackBrandList = [
-  {
-    name: 'Toyota',
-    slug: 'toyota',
-    tag: 'Daily legends',
-    description: 'Corolla, Grande, Yaris, Fortuner and Hilux focused upgrades.',
-    image:
-      'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?q=80&w=1400&auto=format&fit=crop',
-    featured: true,
-  },
-  {
-    name: 'Honda',
-    slug: 'honda',
-    tag: 'Clean performance',
-    description: 'Civic, City, BR-V and Type R inspired accessories.',
-    image:
-      'https://images.unsplash.com/photo-1619767886558-efdc259cde1a?q=80&w=1400&auto=format&fit=crop',
-    featured: true,
-  },
-  {
-    name: 'BMW',
-    slug: 'bmw',
-    tag: 'German precision',
-    description: 'Premium fitment, interior, lighting and care selections.',
-    image:
-      'https://images.unsplash.com/photo-1555215695-3004980ad54e?q=80&w=1400&auto=format&fit=crop',
-    featured: false,
-  },
-  {
-    name: 'Mercedes-Benz',
-    slug: 'mercedes-benz',
-    tag: 'Luxury standard',
-    description: 'Elegant upgrades for comfort, finish and presence.',
-    image:
-      'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?q=80&w=1400&auto=format&fit=crop',
-    featured: false,
-  },
-  {
-    name: 'Audi',
-    slug: 'audi',
-    tag: 'Modern edge',
-    description: 'Lighting, cabin tech, care and styling essentials.',
-    image:
-      'https://images.unsplash.com/photo-1606152421802-db97b9c7a11b?q=80&w=1400&auto=format&fit=crop',
-    featured: false,
-  },
-  {
-    name: 'Suzuki',
-    slug: 'suzuki',
-    tag: 'Practical daily',
-    description: 'Alto, Cultus, Swift and daily-use accessories.',
-    image:
-      'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?q=80&w=1400&auto=format&fit=crop',
-    featured: false,
-  },
-  {
-    name: 'KIA',
-    slug: 'kia',
-    tag: 'Urban SUV',
-    description: 'Sportage focused accessories, care and interior upgrades.',
-    image:
-      'https://images.unsplash.com/photo-1609521263047-f8f205293f24?q=80&w=1400&auto=format&fit=crop',
-    featured: false,
-  },
-  {
-    name: 'Hyundai',
-    slug: 'hyundai',
-    tag: 'Modern utility',
-    description: 'Tucson, Elantra and daily premium selections.',
-    image:
-      'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?q=80&w=1400&auto=format&fit=crop',
-    featured: false,
-  },
-]
+const fallbackBrandList = ['Osram','Philips','Bosch','3M','Teyes','Steelmate','Baseus','Meguiar’s','Sonax','Turtle Wax','Auxito','K&N','Motul','Michelin'].map((name, index) => ({ name, slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-'), tag: index < 4 ? 'Featured supplier' : 'Haxon selection', description: `${name} products curated for lighting, detailing, electronics, care, performance, and premium accessory upgrades.`, image: '/image/products/no-image.jpeg', logo: '/image/products/no-image.jpeg', featured: index < 4, active: true, sortOrder: index + 1 }))
 
 const brands = ref(fallbackBrandList)
 
@@ -119,11 +46,11 @@ onMounted(async () => {
           </p>
 
           <h1 class="mt-5 text-[clamp(3.2rem,8vw,8rem)] font-black uppercase leading-[0.84] tracking-[-0.075em]">
-            Browse by marque.
+            Browse by brand.
           </h1>
 
           <p class="mt-7 max-w-2xl text-base leading-8 text-white/55 sm:text-lg">
-            Toyota, Honda, BMW, Mercedes-Benz, Audi and selected universal brands arranged for cleaner discovery.
+            Product brands Haxon sells — lighting, detailing, care, electronics, performance and accessory specialists arranged for cleaner discovery.
           </p>
         </div>
       </div>
@@ -142,7 +69,7 @@ onMounted(async () => {
         </div>
 
         <p class="hidden text-sm text-white/40 sm:block">
-          {{ brands.length }} marques listed
+          {{ brands.length }} brands listed
         </p>
       </div>
 
@@ -182,7 +109,7 @@ onMounted(async () => {
 
             <div>
               <p class="text-[10px] font-black uppercase tracking-[0.2em] text-[#E50914]">
-                {{ brand.tag || 'Premium marque' }}
+                {{ brand.tag || 'Product brand' }}
               </p>
 
               <h3 class="mt-3 text-[clamp(2rem,3vw,3.3rem)] font-black uppercase leading-[0.9] tracking-[-0.06em]">

@@ -129,3 +129,6 @@ a {
 .hero-image-fade-enter-active,.hero-image-fade-leave-active{transition:opacity 1s ease, transform 1.4s ease}.hero-image-fade-enter-from{opacity:0;transform:scale(1.04)}.hero-image-fade-leave-to{opacity:0;transform:scale(1.01)}.hero-copy-enter-active,.hero-copy-leave-active{transition:opacity .65s ease, transform .65s ease}.hero-copy-enter-from,.hero-copy-leave-to{opacity:0;transform:translateY(20px)}
 @media (max-width: 767px) { .hero-content { justify-content:flex-end; padding-bottom: 13rem; } .editorial-heading { font-size: clamp(3.1rem, 17vw, 5.8rem); } .hero-cta { width:100%; } .thin-progress { width:1.6rem; } .thin-progress.is-active { width:3rem; } }
 @media (prefers-reduced-motion: reduce) { .hero-bg,.hero-image-fade-enter-active,.hero-image-fade-leave-active,.hero-copy-enter-active,.hero-copy-leave-active,.cinematic-tile img { transition:none !important; transform:none !important; } }
+
+@keyframes haxon-loader{0%{transform:translateX(-120%)}50%{transform:translateX(80%)}100%{transform:translateX(220%)}}
+@media (prefers-reduced-motion: reduce){*,::before,::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}

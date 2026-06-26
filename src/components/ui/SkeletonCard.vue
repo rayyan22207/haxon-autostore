@@ -1,0 +1,1 @@
+<template><div class="border border-white/10 bg-[#050607] p-3"><div class="aspect-square animate-pulse bg-white/10"></div><div class="mt-4 h-3 w-1/3 animate-pulse bg-white/10"></div><div class="mt-3 h-5 w-4/5 animate-pulse bg-white/10"></div><div class="mt-3 h-4 w-1/2 animate-pulse bg-white/10"></div></div></template>

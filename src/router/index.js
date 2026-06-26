@@ -10,6 +10,7 @@ import Contact from '../pages/Contact.vue'
 import TrackOrder from '../pages/TrackOrder.vue'
 import Brands from '../pages/Brands.vue'
 import About from '../pages/About.vue'
+import Catalogs from '../pages/Catalogs.vue'
 
 import Login from '../pages/admin/Login.vue'
 import Dashboard from '../pages/admin/Dashboard.vue'
@@ -30,6 +31,7 @@ const routes = [
   { path: '/contact', component: Contact },
   { path: '/track-order', component: TrackOrder },
   { path: '/brands', component: Brands },
+  { path: '/catalogs', component: Catalogs },
   { path: '/about', component: About},
   { path: '/admin/login', component: Login },
   { path: '/admin/access-denied', component: AdminAccessDenied, meta: { requiresAuthOnly: true } },

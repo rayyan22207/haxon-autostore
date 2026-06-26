@@ -4,6 +4,8 @@ import { useRoute } from 'vue-router'
 import { useProductStore } from '../stores/productStore'
 import { useCartStore } from '../stores/cartStore'
 import ProductCard from '../components/ui/ProductCard.vue'
+import HaxonImage from '../components/ui/HaxonImage.vue'
+import { useSeo } from '../composables/useSeo'
 import {
   FALLBACK_IMAGE,
   formatPrice,
@@ -26,6 +28,10 @@ const images = computed(() => {
   if (!product.value) return [FALLBACK_IMAGE]
 
   const list = [
+    product.value.mainImage,
+    product.value.cardImage,
+    product.value.bannerImage,
+    ...(product.value.galleryImages || []),
     ...(product.value.images || []),
     product.value.image,
     product.value.imageUrl,
@@ -117,6 +123,7 @@ onMounted(async () => {
   }
 
   selected.value = productImage(product.value) || images.value[0]
+  if (product.value) useSeo({ title: product.value.name, description: product.value.shortDescription || product.value.description, image: productImage(product.value), schema: { '@context':'https://schema.org', '@type':'Product', name: product.value.name, brand: productBrand(product.value), image: images.value, description: product.value.description || product.value.shortDescription, sku: product.value.sku, offers: { '@type':'Offer', priceCurrency:'PKR', price: price.value, availability: product.value.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/PreOrder' } } })
 })
 </script>
 
@@ -142,12 +149,7 @@ onMounted(async () => {
             </p>
 
             <div class="relative flex aspect-square items-center justify-center">
-              <img
-                :src="selected || images[0]"
-                :alt="product.name"
-                class="h-[92%] w-[92%] object-contain transition duration-500"
-                @error="$event.target.src = FALLBACK_IMAGE"
-              />
+              <HaxonImage :src="selected || images[0]" :alt="product.imageAlt || product.name" fit="contain" ratio="h-[92%] w-[92%]" />
             </div>
           </div>
 
@@ -163,12 +165,7 @@ onMounted(async () => {
               :class="selected === image ? 'border-[#E50914]' : 'border-white/10 hover:border-white/25'"
               @click="selected = image"
             >
-              <img
-                :src="image"
-                :alt="product.name"
-                class="h-full w-full object-contain p-2 opacity-70 transition group-hover:opacity-100"
-                @error="$event.target.src = FALLBACK_IMAGE"
-              />
+              <HaxonImage :src="image" :alt="product.imageAlt || product.name" fit="contain" ratio="h-full w-full" img-class="p-2 opacity-80 group-hover:opacity-100" />
             </button>
           </div>
         </div>
@@ -219,7 +216,7 @@ onMounted(async () => {
             </div>
 
             <p class="mt-6 text-base leading-7 text-white/52">
-              {{ product.description || 'Premium automotive accessory curated by Haxon Autostore.' }}
+              {{ product.shortDescription || product.description || 'Premium automotive accessory curated by Haxon Autostore.' }}
             </p>
 
             <div class="mt-8 grid gap-3 sm:grid-cols-[1fr_auto]">

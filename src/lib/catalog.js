@@ -3,14 +3,7 @@ export const productModes = ['Ready to Dispatch', 'Confirm Fitment', 'On Request
 export const orderStatuses = ['Pending', 'Confirmed', 'Processing', 'Packed', 'Dispatched', 'Delivered', 'Cancelled']
 export const paymentStatuses = ['Unpaid', 'Paid', 'Partial', 'Refunded']
 export const categories = ['Exterior Accessories','Interior Accessories','LED & Lighting','Android Panels','Audio & Multimedia','Car Care','Security','Tools & Emergency']
-export const fallbackBrands = [
-  { name: 'Toyota', slug: 'toyota', description: 'OEM-inspired upgrades for Pakistan’s most trusted daily drivers.' },
-  { name: 'Honda', slug: 'honda', description: 'Refined interior, lighting, and multimedia accessories.' },
-  { name: 'BMW', slug: 'bmw', description: 'Premium imported upgrades for German platforms.' },
-  { name: 'Mercedes-Benz', slug: 'mercedes-benz', description: 'Executive-grade accessories and detailing essentials.' },
-  { name: 'Audi', slug: 'audi', description: 'Minimal, high-performance accessory selections.' },
-  { name: 'Universal', slug: 'universal', description: 'Curated accessories with broad compatibility.' },
-]
+export const fallbackBrands = ['Osram','Philips','Bosch','3M','Teyes','Steelmate','Baseus','Meguiar’s','Sonax','Turtle Wax','Auxito','K&N','Motul','Michelin'].map((name, index) => ({ name, slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''), description: `${name} product selections curated by Haxon for premium automotive upgrades.`, featured: index < 4, active: true, sortOrder: index + 1, image: FALLBACK_IMAGE, logo: FALLBACK_IMAGE }))
 
 const statusAliases = {
   'pending confirmation': 'Pending', pending: 'Pending', 'vendor checking': 'Processing', confirmed: 'Confirmed',
@@ -43,7 +36,7 @@ export const getOrderStatusSteps = (status = '') => {
   const activeIndex = current === 'Cancelled' ? -1 : steps.indexOf(current)
   return steps.map((step, index) => ({ status: step, label: getOrderStatusLabel(step), complete: activeIndex >= index, current: step === current }))
 }
-export const getProductImage = (product = {}) => product.images?.[0] || product.image || product.imageUrl || FALLBACK_IMAGE
+export const getProductImage = (product = {}) => product.cardImage || product.mainImage || product.galleryImages?.[0] || product.images?.[0] || product.image || product.imageUrl || FALLBACK_IMAGE
 export const getProductBrand = (product = {}) => product.brand || product.carBrand || 'Universal'
 export const getProductMode = (product = {}) => product.productMode || product.mode || product.availabilityStatus || product.availability || 'Confirm Fitment'
 export const productImage = getProductImage
@@ -52,3 +45,5 @@ export const productMode = getProductMode
 export const orderStatus = (order = {}) => normalizeOrderStatus(order.orderStatus || order.status)
 export const orderTotal = (order = {}) => Number(order.total ?? order.totalAmount ?? order.grandTotal ?? 0)
 export const buildTimelineEntry = (status, note = '') => ({ status: normalizeOrderStatus(status), label: getOrderStatusLabel(status), note, createdAt: new Date().toISOString(), at: new Date().toISOString() })
+
+export const normalizeProduct = (product = {}, id = product.id) => ({ active: true, featured: false, saleEnabled: Boolean(product.salePrice), galleryImages: [], features: [], downloads: [], faqs: [], compatibleMakes: [], compatibleModels: [], compatibleYears: [], compatibleVariants: [], universalFitment: false, ...product, id, slug: product.slug || slugify(product.name || id || ''), brand: getProductBrand(product), category: product.category || 'Accessories', price: Number(product.price || 0), salePrice: product.salePrice === '' ? null : product.salePrice, compareAtPrice: product.compareAtPrice || product.oldPrice || product.mrp || null, mainImage: product.mainImage || product.imageUrl || product.image || product.images?.[0] || FALLBACK_IMAGE, cardImage: product.cardImage || product.mainImage || product.imageUrl || product.image || product.images?.[0] || FALLBACK_IMAGE, imageAlt: product.imageAlt || product.name || 'Haxon product', availability: getProductMode(product), sortOrder: Number(product.sortOrder || 0) })
