@@ -57,11 +57,20 @@ const discountPercent = computed(() => {
   return Math.round(((oldPrice.value - price.value) / oldPrice.value) * 100)
 })
 
+const compatibility = computed(() => {
+  const p = product.value || {}
+  if (p.universalFitment || p.compatibilityType === 'universal') return 'Universal fitment'
+  const parts = [
+    ...(p.compatibleMakes || []),
+    ...(p.compatibleModels || []),
+    ...(p.compatibleYears || []),
+    ...(p.compatibleVariants || []),
+  ]
+  return parts.length ? parts.join(' · ') : (p.fitmentNotes || p.compatibleVehicles || p.carModel || 'Please confirm vehicle year, variant, and trim before dispatch.')
+})
+
 const fitment = computed(() =>
-  product.value?.fitmentNotes ||
-  product.value?.compatibleVehicles ||
-  product.value?.carModel ||
-  'Please confirm vehicle year, variant, and trim before dispatch.',
+  product.value?.fitmentNotes || compatibility.value,
 )
 
 const specifications = computed(() => {
@@ -149,7 +158,7 @@ onMounted(async () => {
             </p>
 
             <div class="relative flex aspect-square items-center justify-center">
-              <HaxonImage :src="selected || images[0]" :alt="product.imageAlt || product.name" fit="contain" ratio="h-[92%] w-[92%]" />
+              <Transition name="fade" mode="out-in"><HaxonImage :key="selected" :src="selected || images[0]" :alt="product.imageAlt || product.name" fit="contain" ratio="h-[92%] w-[92%]" /></Transition>
             </div>
           </div>
 
@@ -313,6 +322,35 @@ onMounted(async () => {
         </aside>
       </div>
 
+      <section class="mt-12 grid gap-4 lg:grid-cols-2">
+        <div class="border border-white/10 bg-[#050607] p-6">
+          <p class="text-[11px] font-black uppercase tracking-[0.2em] text-white/45">Description</p>
+          <p class="mt-4 whitespace-pre-line text-sm leading-7 text-white/58">{{ product.description || product.shortDescription || 'Full product details will be added soon.' }}</p>
+        </div>
+        <div v-if="product.features?.length" class="border border-white/10 bg-[#050607] p-6">
+          <p class="text-[11px] font-black uppercase tracking-[0.2em] text-white/45">Features</p>
+          <ul class="mt-4 grid gap-3 text-sm text-white/58"><li v-for="feature in product.features" :key="feature">• {{ feature }}</li></ul>
+        </div>
+        <div class="border border-white/10 bg-[#050607] p-6">
+          <p class="text-[11px] font-black uppercase tracking-[0.2em] text-white/45">Compatibility</p>
+          <p class="mt-4 text-sm leading-7 text-white/58">{{ compatibility }}</p>
+        </div>
+        <div v-if="product.installationNotes || product.warranty || product.shippingInformation" class="border border-white/10 bg-[#050607] p-6">
+          <p class="text-[11px] font-black uppercase tracking-[0.2em] text-white/45">Installation, Warranty & Shipping</p>
+          <div class="mt-4 space-y-3 text-sm leading-7 text-white/58"><p v-if="product.installationNotes"><b>Installation:</b> {{ product.installationNotes }}</p><p v-if="product.warranty"><b>Warranty:</b> {{ product.warranty }}</p><p v-if="product.shippingInformation"><b>Shipping:</b> {{ product.shippingInformation }}</p></div>
+        </div>
+        <div v-if="product.packageContents?.length || product.downloads?.length || product.youtubeVideo" class="border border-white/10 bg-[#050607] p-6 lg:col-span-2">
+          <p class="text-[11px] font-black uppercase tracking-[0.2em] text-white/45">Resources</p>
+          <ul v-if="product.packageContents?.length" class="mt-4 grid gap-2 text-sm text-white/58"><li v-for="item in product.packageContents" :key="item">Package: {{ item }}</li></ul>
+          <div v-if="product.downloads?.length" class="mt-4 flex flex-wrap gap-3"><a v-for="file in product.downloads" :key="file.url || file.label" :href="file.url" target="_blank" class="border border-white/10 px-4 py-2 text-xs font-bold uppercase text-white/70">{{ file.label || 'Download' }}</a></div>
+          <a v-if="product.youtubeVideo" :href="product.youtubeVideo" target="_blank" class="mt-4 inline-flex text-sm text-red-300">Watch installation video →</a>
+        </div>
+        <div v-if="product.faqs?.length" class="border border-white/10 bg-[#050607] p-6 lg:col-span-2">
+          <p class="text-[11px] font-black uppercase tracking-[0.2em] text-white/45">FAQs</p>
+          <details v-for="faq in product.faqs" :key="faq.question" class="mt-4 border-t border-white/10 pt-4"><summary class="cursor-pointer font-bold text-white/75">{{ faq.question }}</summary><p class="mt-3 text-sm text-white/55">{{ faq.answer }}</p></details>
+        </div>
+      </section>
+
       <section v-if="related.length" class="mt-16 border-t border-white/10 pt-9">
         <div class="mb-7 flex items-end justify-between gap-4">
           <div>
@@ -364,3 +402,7 @@ onMounted(async () => {
     </section>
   </main>
 </template>
+<style scoped>
+.fade-enter-active,.fade-leave-active{transition:opacity .2s ease}
+.fade-enter-from,.fade-leave-to{opacity:0}
+</style>

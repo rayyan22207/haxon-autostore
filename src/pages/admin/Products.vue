@@ -36,7 +36,7 @@ const availabilityOptions = computed(() => [...new Set(products.value.map((p) =>
 const filteredProducts = computed(() => {
   const term = search.value.toLowerCase().trim()
   const filtered = products.value.filter((product) => {
-    const searchableText = [product.name, product.category, productBrand(product), product.carModel, product.slug].join(' ').toLowerCase()
+    const searchableText = [product.name, product.sku, product.category, productBrand(product), product.carModel, product.slug, ...(product.compatibleMakes || []), ...(product.compatibleModels || [])].join(' ').toLowerCase()
     const active = product.active !== false && product.isActive !== false && product.archived !== true
     return (!term || searchableText.includes(term)) &&
       (!selectedCategory.value || product.category === selectedCategory.value) &&
@@ -341,8 +341,8 @@ onMounted(fetchProducts)
             </div>
 
             <div class="text-sm text-slate-300 mb-4">
-              {{ product.carBrand || 'Brand' }}
-              {{ product.carModel || 'Model' }}
+              {{ productBrand(product) }}
+              {{ product.compatibleModels?.[0] || product.carModel || 'Universal fitment' }}
             </div>
 
             <div class="mb-4">

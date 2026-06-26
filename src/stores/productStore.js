@@ -2,19 +2,31 @@ import { defineStore } from 'pinia'
 import { getProducts } from '../services/productService'
 import { productBrand, productMode } from '../lib/catalog'
 
+const searchable = (product) => [
+  product.name, product.sku, product.slug, product.category, productBrand(product), product.shortDescription,
+  product.description, product.fitmentNotes, product.carModel, ...(product.compatibleMakes || []), ...(product.compatibleModels || []),
+  ...(product.compatibleYears || []), ...(product.compatibleVariants || []), ...(product.features || []),
+].join(' ').toLowerCase()
+
 export const useProductStore = defineStore('products', {
-  state: () => ({ products: [], loading: false, error: '', search: '', category: 'All', brand: 'All', availability: 'All', sort: 'featured' }),
+  state: () => ({ products: [], loading: false, loaded: false, error: '', search: '', category: 'All', brand: 'All', availability: 'All', sort: 'featured', page: 1, perPage: 12 }),
   getters: {
     filteredProducts: (state) => {
-      const term = state.search.toLowerCase()
-      const filtered = state.products.filter((product) => {
-        const haystack = [product.name, productBrand(product), product.carModel, product.category, product.shortDescription, product.fitmentNotes].join(' ').toLowerCase()
-        return (!term || haystack.includes(term)) && (state.category === 'All' || product.category === state.category) && (state.brand === 'All' || productBrand(product) === state.brand) && (state.availability === 'All' || productMode(product) === state.availability)
-      })
-      return [...filtered].sort((a,b) => state.sort === 'price-low' ? Number(a.salePrice || a.price || 0) - Number(b.salePrice || b.price || 0) : state.sort === 'price-high' ? Number(b.salePrice || b.price || 0) - Number(a.salePrice || a.price || 0) : state.sort === 'newest' ? String(b.createdAt?.seconds || b.createdAt || '').localeCompare(String(a.createdAt?.seconds || a.createdAt || '')) : Number(b.featured || 0) - Number(a.featured || 0) || Number(a.sortOrder || 0) - Number(b.sortOrder || 0))
+      const term = state.search.toLowerCase().trim()
+      const filtered = state.products.filter((product) => (!term || searchable(product).includes(term)) && (state.category === 'All' || product.category === state.category) && (state.brand === 'All' || productBrand(product) === state.brand) && (state.availability === 'All' || productMode(product) === state.availability))
+      return [...filtered].sort((a,b) => state.sort === 'price-low' ? Number(a.currentPrice || a.price || 0) - Number(b.currentPrice || b.price || 0) : state.sort === 'price-high' ? Number(b.currentPrice || b.price || 0) - Number(a.currentPrice || a.price || 0) : state.sort === 'newest' ? Number(b.createdAt?.seconds || 0) - Number(a.createdAt?.seconds || 0) : Number(b.featured || 0) - Number(a.featured || 0) || Number(a.sortOrder || 0) - Number(b.sortOrder || 0))
     },
+    paginatedProducts: (state) => state.filteredProducts.slice((state.page - 1) * state.perPage, state.page * state.perPage),
+    totalPages: (state) => Math.max(Math.ceil(state.filteredProducts.length / state.perPage), 1),
     brands: (state) => [...new Set(state.products.map(productBrand).filter(Boolean))].sort(),
     categories: (state) => [...new Set(state.products.map((p) => p.category).filter(Boolean))].sort(),
   },
-  actions: { async fetchProducts(){ this.loading=true; this.error=''; try{ this.products=await getProducts() }catch(error){ this.error=error.message || 'Unable to load products'; } finally{ this.loading=false } } }
+  actions: {
+    async fetchProducts(){
+      this.loading = true; this.error = ''
+      try { this.products = await getProducts(); this.loaded = true; if (this.page > this.totalPages) this.page = 1 }
+      catch(error){ this.error = error.message || 'Unable to load products'; throw error }
+      finally{ this.loading = false }
+    },
+  },
 })
