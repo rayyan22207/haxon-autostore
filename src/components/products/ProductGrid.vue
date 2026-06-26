@@ -12,7 +12,7 @@ const products = computed(() => productStore.products || [])
   <div>
     <div
       v-if="products.length"
-      class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4"
+      class="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-4"
     >
       <ProductCard
         v-for="product in products"
