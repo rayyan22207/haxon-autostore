@@ -27,6 +27,8 @@ service cloud.firestore {
     match /categoryTiles/{id} { allow read: if true; allow write: if hasPermission('manage_content') && safeContent(); }
     match /brandTiles/{id} { allow read: if true; allow write: if hasPermission('manage_content') && safeContent(); }
     match /trustItems/{id} { allow read: if true; allow write: if hasPermission('manage_content') && safeContent(); }
+    match /brands/{id} { allow read: if true; allow write: if hasPermission('manage_content') && safeContent(); }
+    match /catalogs/{id} { allow read: if true; allow write: if hasPermission('manage_content') && safeContent(); }
     match /{document=**} { allow read, write: if false; }
   }
 }

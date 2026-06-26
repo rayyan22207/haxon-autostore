@@ -57,7 +57,6 @@ export const replaceProductImage = async (newFile, oldImagePath = null) => {
       const oldRef = storageRef(storage, oldImagePath)
       await deleteObject(oldRef)
     } catch (error) {
-      console.warn('Old image could not be deleted:', error)
     }
   }
 

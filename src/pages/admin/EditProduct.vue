@@ -3,18 +3,8 @@ import { toast } from 'vue-sonner'
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import {
-  doc,
-  getDoc,
-  updateDoc,
-  serverTimestamp,
-} from 'firebase/firestore'
-
-import { db } from '../../firebase/config'
-
-import {
-  replaceProductImage,
-} from '../../services/imageService'
+import { replaceProductImage } from '../../services/imageService'
+import { getProductById, updateProduct } from '../../services/productService'
 
 const route = useRoute()
 const router = useRouter()
@@ -166,23 +156,13 @@ const loadProduct = async () => {
   try {
     pageLoading.value = true
 
-    const docRef = doc(
-      db,
-      'products',
-      route.params.id
-    )
+    const data = await getProductById(route.params.id)
 
-    const snap = await getDoc(docRef)
-
-    if (!snap.exists()) {
+    if (!data) {
       toast.error('Product not found.')
-
-      toast.success('Product saved'); router.push('/admin/products')
-
+      router.push('/admin/products')
       return
     }
-
-    const data = snap.data()
 
     form.value = {
       name: data.name || '',
@@ -246,8 +226,6 @@ const loadProduct = async () => {
       imagePreview: '',
     }
   } catch (err) {
-    console.error(err)
-
     toast.error(
       'Failed to load product.'
     )
@@ -358,85 +336,22 @@ const saveProduct =
           uploaded.path
       }
 
-      await updateDoc(
-        doc(
-          db,
-          'products',
-          route.params.id
-        ),
-        {
-          name:
-            form.value.name.trim(),
-
-          slug:
-            form.value.slug,
-
-          category:
-            form.value.category,
-
-          description:
-            form.value.description.trim(),
-
-          carBrand:
-            form.value.carBrand.trim(),
-
-          carModel:
-            form.value.carModel.trim(),
-
-          price: Number(
-            form.value.price
-          ),
-
-          saleEnabled:
-            form.value.saleEnabled,
-
-          saleType:
-            form.value.saleType,
-
-          saleValue: Number(
-            form.value.saleValue ||
-              0
-          ),
-
-          salePrice:
-            calculatedSalePrice.value,
-
-          availability:
-            form.value.availability,
-
-          estimatedDelivery:
-            form.value
-              .estimatedDelivery,
-
-          featured:
-            form.value.featured,
-
-          active:
-            form.value.active,
-
-          image:
-            imageUrl,
-
-          imagePath:
-            imagePath,
-
-          updatedAt:
-            serverTimestamp(),
-        }
-      )
+      await updateProduct(route.params.id, {
+        ...form.value,
+        image: imageUrl,
+        mainImage: imageUrl,
+        imagePath,
+      })
 
       toast.success(
         'Product updated successfully.'
       )
 
-      toast.success('Product saved')
       router.push(
         '/admin/products'
       )
     } catch (err) {
-      console.error(err)
-
-      toast.error(
+        toast.error(
         err.message ||
           'Failed to update product.'
       )
@@ -455,7 +370,7 @@ onMounted(() => {
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
         <div>
           <button
-            @click="toast.success('Product saved'); router.push('/admin/products')"
+            @click="router.push('/admin/products')"
             class="text-sm text-slate-400 hover:text-red-600 mb-3"
           >
             ← Back to products
@@ -479,7 +394,7 @@ onMounted(() => {
           </button>
 
           <button
-            @click="toast.success('Product saved'); router.push('/admin/products')"
+            @click="router.push('/admin/products')"
             class="admin-btn-secondary"
           >
             Cancel
@@ -970,7 +885,7 @@ onMounted(() => {
             </button>
 
             <button
-              @click="toast.success('Product saved'); router.push('/admin/products')"
+              @click="router.push('/admin/products')"
               class="admin-btn-secondary w-full mt-3"
             >
               Cancel

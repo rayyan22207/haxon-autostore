@@ -16,5 +16,5 @@ export const useProductStore = defineStore('products', {
     brands: (state) => [...new Set(state.products.map(productBrand).filter(Boolean))].sort(),
     categories: (state) => [...new Set(state.products.map((p) => p.category).filter(Boolean))].sort(),
   },
-  actions: { async fetchProducts(){ this.loading=true; this.error=''; try{ this.products=await getProducts() }catch(error){ this.error=error.message || 'Unable to load products'; console.error(error) } finally{ this.loading=false } } }
+  actions: { async fetchProducts(){ this.loading=true; this.error=''; try{ this.products=await getProducts() }catch(error){ this.error=error.message || 'Unable to load products'; } finally{ this.loading=false } } }
 })

@@ -1,14 +1,8 @@
 <script setup>
 import { toast } from 'vue-sonner'
 import { ref, computed, watch } from 'vue'
-import {
-  addDoc,
-  collection,
-  serverTimestamp,
-} from 'firebase/firestore'
-
-import { db } from '../../firebase/config'
 import { uploadProductImage } from '../../services/imageService'
+import { createProduct } from '../../services/productService'
 
 const categories = [
   'Exterior Accessories',
@@ -241,68 +235,11 @@ const saveProduct = async () => {
         )
     }
 
-    await addDoc(
-      collection(db, 'products'),
-      {
-        name: form.value.name.trim(),
-
-        slug: form.value.slug,
-
-        category: form.value.category,
-
-        description:
-          form.value.description.trim(),
-
-        carBrand:
-          form.value.carBrand.trim(),
-
-        carModel:
-          form.value.carModel.trim(),
-
-        price: Number(
-          form.value.price
-        ),
-
-        saleEnabled:
-          form.value.saleEnabled,
-
-        saleType:
-          form.value.saleType,
-
-        saleValue: Number(
-          form.value.saleValue || 0
-        ),
-
-        salePrice:
-          calculatedSalePrice.value,
-
-        availability:
-          form.value.availability,
-
-        estimatedDelivery:
-          form.value
-            .estimatedDelivery,
-
-        featured:
-          form.value.featured,
-
-        active:
-          form.value.active,
-
-        image:
-          uploadedImage?.url ??
-          '/images/no-image.jpg',
-
-        imagePath:
-          uploadedImage?.path ?? '',
-
-        createdAt:
-          serverTimestamp(),
-
-        updatedAt:
-          serverTimestamp(),
-      }
-    )
+    await createProduct({
+      ...form.value,
+      image: uploadedImage?.url || form.value.imagePreview || '',
+      imagePath: uploadedImage?.path || '',
+    })
 
     toast.success(
       'Product created successfully.'
@@ -310,8 +247,6 @@ const saveProduct = async () => {
 
     resetForm()
   } catch (err) {
-    console.error(err)
-
     toast.error(
       err.message ??
         'Failed to save product.'

@@ -1,170 +1,80 @@
 <script setup>
 import { toast } from 'vue-sonner'
 import { ref, computed, onMounted } from 'vue'
-import {
-  collection,
-  getDocs,
-  deleteDoc,
-  doc,
-  query,
-  orderBy,
-} from 'firebase/firestore'
-
-import { db } from '../../firebase/config'
+import HaxonImage from '../../components/ui/HaxonImage.vue'
+import { archiveProduct, deleteProduct, getAdminProducts, toggleFeaturedProduct } from '../../services/productService'
+import { productBrand, productImage } from '../../lib/catalog'
 
 const products = ref([])
 const loading = ref(true)
+const savingId = ref('')
 const error = ref('')
-
 const search = ref('')
 const selectedCategory = ref('')
 const selectedAvailability = ref('')
 const selectedStatus = ref('')
+const sort = ref('newest')
 
-const categories = [
-  'Exterior Accessories',
-  'Interior Accessories',
-  'LED & Lighting',
-  'Android Panels',
-  'Audio & Multimedia',
-  'Speakers',
-  'Car Care',
-  'Security',
-  'Emergency Tools',
-  'Phone Holders',
-  'Charging Accessories',
-  'Air Pumps',
-  'Seat Covers',
-  'Tools',
-  'Other',
-]
-
-const availabilityOptions = [
-  'Available',
-  'Check Availability',
-  'Pre Order',
-  'Unavailable',
-]
-
-const formatPrice = (value) => {
-  return new Intl.NumberFormat('en-PK', {
-    style: 'currency',
-    currency: 'PKR',
-    maximumFractionDigits: 0,
-  }).format(value || 0)
-}
+const formatPrice = (value) => new Intl.NumberFormat('en-PK', { style: 'currency', currency: 'PKR', maximumFractionDigits: 0 }).format(value || 0)
 
 const fetchProducts = async () => {
   try {
     loading.value = true
     error.value = ''
-
-    const q = query(
-      collection(db, 'products'),
-      orderBy('createdAt', 'desc')
-    )
-
-    const snapshot = await getDocs(q)
-
-    products.value = snapshot.docs.map((item) => ({
-      id: item.id,
-      ...item.data(),
-    }))
+    products.value = await getAdminProducts()
   } catch (err) {
-    console.error(err)
-    error.value = 'Failed to load products.'
+    error.value = err.message || 'Failed to load products.'
+    toast.error(error.value)
   } finally {
     loading.value = false
   }
 }
 
+const categories = computed(() => [...new Set(products.value.map((p) => p.category).filter(Boolean))].sort())
+const availabilityOptions = computed(() => [...new Set(products.value.map((p) => p.availability || p.availabilityStatus).filter(Boolean))].sort())
+
 const filteredProducts = computed(() => {
   const term = search.value.toLowerCase().trim()
-
-  return products.value.filter((product) => {
-    const searchableText = [
-      product.name,
-      product.category,
-      product.carBrand,
-      product.carModel,
-      product.slug,
-    ]
-      .join(' ')
-      .toLowerCase()
-
-    const matchesSearch =
-      !term || searchableText.includes(term)
-
-    const matchesCategory =
-      !selectedCategory.value ||
-      product.category === selectedCategory.value
-
-    const matchesAvailability =
-      !selectedAvailability.value ||
-      product.availability === selectedAvailability.value ||
-      product.availabilityStatus === selectedAvailability.value
-
-    const matchesStatus =
-      !selectedStatus.value ||
-      (selectedStatus.value === 'active' && product.active !== false && product.isActive !== false) ||
-      (selectedStatus.value === 'inactive' && (product.active === false || product.isActive === false)) ||
-      (selectedStatus.value === 'featured' && (product.featured === true || product.isFeatured === true)) ||
-      (selectedStatus.value === 'sale' && product.saleEnabled === true)
-
-    return (
-      matchesSearch &&
-      matchesCategory &&
-      matchesAvailability &&
-      matchesStatus
-    )
+  const filtered = products.value.filter((product) => {
+    const searchableText = [product.name, product.category, productBrand(product), product.carModel, product.slug].join(' ').toLowerCase()
+    const active = product.active !== false && product.isActive !== false && product.archived !== true
+    return (!term || searchableText.includes(term)) &&
+      (!selectedCategory.value || product.category === selectedCategory.value) &&
+      (!selectedAvailability.value || product.availability === selectedAvailability.value || product.availabilityStatus === selectedAvailability.value) &&
+      (!selectedStatus.value ||
+        (selectedStatus.value === 'active' && active) ||
+        (selectedStatus.value === 'inactive' && !active) ||
+        (selectedStatus.value === 'featured' && (product.featured === true || product.isFeatured === true)) ||
+        (selectedStatus.value === 'sale' && product.saleEnabled === true))
   })
+  return [...filtered].sort((a, b) => sort.value === 'price-low' ? Number(a.salePrice || a.price || 0) - Number(b.salePrice || b.price || 0) : sort.value === 'price-high' ? Number(b.salePrice || b.price || 0) - Number(a.salePrice || a.price || 0) : sort.value === 'sortOrder' ? Number(a.sortOrder || 0) - Number(b.sortOrder || 0) : String(b.createdAt?.seconds || b.createdAt || '').localeCompare(String(a.createdAt?.seconds || a.createdAt || '')))
 })
 
-const stats = computed(() => {
-  return {
-    total: products.value.length,
-    active: products.value.filter(
-      (product) =>
-        product.active !== false &&
-        product.isActive !== false
-    ).length,
-    featured: products.value.filter(
-      (product) =>
-        product.featured === true ||
-        product.isFeatured === true
-    ).length,
-    sale: products.value.filter(
-      (product) => product.saleEnabled === true
-    ).length,
-  }
-})
+const stats = computed(() => ({
+  total: products.value.length,
+  active: products.value.filter((p) => p.active !== false && p.isActive !== false && p.archived !== true).length,
+  featured: products.value.filter((p) => p.featured === true || p.isFeatured === true).length,
+  sale: products.value.filter((p) => p.saleEnabled === true).length,
+}))
 
-const removeProduct = async (product) => {
-  const confirmDelete = confirm(
-    `Delete "${product.name}"?\n\nThis action cannot be undone.`
-  )
-
-  if (!confirmDelete) return
-
+const runProductAction = async (product, action, label) => {
   try {
-    await deleteDoc(doc(db, 'products', product.id))
+    savingId.value = `${label}-${product.id}`
+    await action()
+    toast.success(`Product ${label}.`)
     await fetchProducts()
   } catch (err) {
-    console.error(err)
-    toast.error('Failed to delete product.')
+    toast.error(err.message || `Failed to ${label} product.`)
+  } finally {
+    savingId.value = ''
   }
 }
+const removeProduct = (product) => { if (confirm(`Delete "${product.name}"?\n\nThis action cannot be undone.`)) runProductAction(product, () => deleteProduct(product.id), 'deleted') }
+const archive = (product) => runProductAction(product, () => archiveProduct(product.id), 'archived')
+const toggleFeatured = (product) => runProductAction(product, () => toggleFeaturedProduct(product.id, !(product.featured || product.isFeatured)), (product.featured || product.isFeatured) ? 'unfeatured' : 'featured')
+const clearFilters = () => { search.value = ''; selectedCategory.value = ''; selectedAvailability.value = ''; selectedStatus.value = ''; sort.value = 'newest' }
 
-const clearFilters = () => {
-  search.value = ''
-  selectedCategory.value = ''
-  selectedAvailability.value = ''
-  selectedStatus.value = ''
-}
-
-onMounted(() => {
-  fetchProducts()
-})
+onMounted(fetchProducts)
 </script>
 
 <template>
@@ -232,7 +142,7 @@ onMounted(() => {
       </div>
 
       <div class="admin-card p-5 mb-8">
-        <div class="grid grid-cols-1 lg:grid-cols-5 gap-4">
+        <div class="grid grid-cols-1 lg:grid-cols-6 gap-4">
           <input
             v-model="search"
             placeholder="Search name, brand, model, category..."
@@ -296,6 +206,13 @@ onMounted(() => {
             <option value="sale">
               On Sale
             </option>
+          </select>
+
+          <select v-model="sort" class="admin-input">
+            <option value="newest">Newest</option>
+            <option value="sortOrder">Sort order</option>
+            <option value="price-low">Price low</option>
+            <option value="price-high">Price high</option>
           </select>
         </div>
 
@@ -379,19 +296,7 @@ onMounted(() => {
           class="admin-card overflow-hidden transition hover:border-white/20"
         >
           <div class="relative h-56 bg-gray-100">
-            <img
-              v-if="product.image"
-              :src="product.image"
-              :alt="product.name"
-              class="w-full h-full object-cover"
-            />
-
-            <div
-              v-else
-              class="w-full h-full flex items-center justify-center text-gray-400"
-            >
-              No image
-            </div>
+            <HaxonImage :src="productImage(product)" :alt="product.name" ratio="h-56" />
 
             <div class="absolute top-3 left-3 flex gap-2 flex-wrap">
               <span
@@ -476,20 +381,11 @@ onMounted(() => {
               </span>
             </div>
 
-            <div class="flex gap-3">
-              <router-link
-                :to="`/admin/products/edit/${product.id}`"
-                class="flex-1 admin-btn-secondary"
-              >
-                Edit
-              </router-link>
-
-              <button
-                @click="removeProduct(product)"
-                class="flex-1 rounded-full border border-red-400/30 bg-red-500/10 px-4 py-3 text-red-100 transition hover:bg-red-500/20"
-              >
-                Delete
-              </button>
+            <div class="grid grid-cols-2 gap-3">
+              <router-link :to="`/admin/products/edit/${product.id}`" class="admin-btn-secondary text-center">Edit</router-link>
+              <button @click="toggleFeatured(product)" :disabled="savingId.includes(product.id)" class="admin-btn-secondary">{{ product.featured || product.isFeatured ? 'Unfeature' : 'Feature' }}</button>
+              <button @click="archive(product)" :disabled="savingId.includes(product.id)" class="admin-btn-secondary">Archive</button>
+              <button @click="removeProduct(product)" :disabled="savingId.includes(product.id)" class="rounded-full border border-red-400/30 bg-red-500/10 px-4 py-3 text-red-100 transition hover:bg-red-500/20">Delete</button>
             </div>
           </div>
         </div>

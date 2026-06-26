@@ -3,8 +3,8 @@ import { db } from '../firebase/config'
 import { fallbackBrandTiles, fallbackCategoryTiles, fallbackHeroSlides, fallbackSignatureShowcase, fallbackSiteSettings, fallbackTrustItems } from './contentFallbacks'
 import { FALLBACK_IMAGE } from './catalog'
 
-const collections = ['heroSlides', 'categoryTiles', 'brandTiles', 'trustItems']
-const fallbackMap = { heroSlides: fallbackHeroSlides, categoryTiles: fallbackCategoryTiles, brandTiles: fallbackBrandTiles, trustItems: fallbackTrustItems }
+const collections = ['heroSlides', 'categoryTiles', 'brandTiles', 'trustItems', 'brands', 'catalogs']
+const fallbackMap = { heroSlides: fallbackHeroSlides, categoryTiles: fallbackCategoryTiles, brandTiles: fallbackBrandTiles, trustItems: fallbackTrustItems, brands: [], catalogs: [] }
 const text = (value, fallback = '') => String(value || fallback || '').trim()
 const activeSorted = (items) => items.filter((item) => item.active !== false).sort((a, b) => Number(a.sortOrder || 0) - Number(b.sortOrder || 0))
 const normalizeImage = (value) => text(value, FALLBACK_IMAGE)
@@ -31,14 +31,15 @@ export async function fetchStorefrontContent() {
       usingFallback: false,
     }
   } catch (error) {
-    console.warn('Storefront content fallback used:', error)
     return { siteSettings: fallbackSiteSettings, heroSlides: fallbackHeroSlides, categoryTiles: fallbackCategoryTiles, signatureShowcase: fallbackSignatureShowcase, brandTiles: fallbackBrandTiles, trustItems: fallbackTrustItems, usingFallback: true }
   }
 }
 
+export const getContentDoc = async (name, id) => { const snap = await getDoc(doc(db, name, id)); return snap.exists() ? { id: snap.id, ...snap.data() } : null }
 export const listContent = async (name) => (await getDocs(query(collection(db, name), orderBy('sortOrder', 'asc')))).docs.map((d) => ({ id: d.id, ...d.data() }))
+const normalizeContentPayload = (payload = {}) => Object.fromEntries(Object.entries(payload).filter(([key, value]) => !key.endsWith('File') && key !== 'id' && value !== undefined))
 export const saveContent = async (name, payload, id = null) => {
-  const data = { ...payload, updatedAt: serverTimestamp() }
+  const data = { ...normalizeContentPayload(payload), updatedAt: serverTimestamp() }
   if (id) { await updateDoc(doc(db, name, id), data); return id }
   const ref = await addDoc(collection(db, name), { ...data, createdAt: serverTimestamp() }); return ref.id
 }
