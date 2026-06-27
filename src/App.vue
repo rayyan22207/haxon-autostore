@@ -3,6 +3,7 @@ import Navbar from './components/Navbar.vue'
 import Footer from './components/Footer.vue'
 import FloatingActions from './components/FloatingActions.vue'
 import LoadingScreen from './components/ui/LoadingScreen.vue'
+import IntroExperience from './components/ui/IntroExperience.vue'
 import { ref } from 'vue'
 import router from './router'
 const routeLoading = ref(false)
@@ -17,6 +18,7 @@ import 'vue-sonner/style.css'
   <div
     class="min-h-screen bg-[#050608] text-white flex flex-col"
   >
+    <IntroExperience />
     <Transition name="fade"><LoadingScreen v-if="routeLoading" /></Transition>
     <Navbar />
 

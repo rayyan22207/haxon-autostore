@@ -1,5 +1,6 @@
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { useProductStore } from '../stores/productStore'
 
 import ProductBanner from '../components/products/ProductBanner.vue'
@@ -9,10 +10,18 @@ import ProductGrid from '../components/products/ProductGrid.vue'
 import ProductPagination from '../components/products/ProductPagination.vue'
 
 const productStore = useProductStore()
+const route = useRoute()
+const applyCarFilters = () => {
+  productStore.carMake = String(route.query.make || '')
+  productStore.carModel = String(route.query.model || '')
+  productStore.page = 1
+}
 
 onMounted(() => {
+  applyCarFilters()
   productStore.fetchProducts()
 })
+watch(() => route.query, applyCarFilters)
 </script>
 
 <template>

@@ -1,55 +1,12 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { useContentStore } from '../../stores/contentStore'
 
 const track = ref(null)
-
-const categories = [
-  {
-    title: 'LED Lighting',
-    subtitle: 'See better. Drive safer.',
-    link: '/products?category=lighting',
-    image: '/image/categories/led-lighting.png',
-  },
-  {
-    title: 'Car Care',
-    subtitle: 'Keep it clean. Keep it proud.',
-    link: '/products?category=car-care',
-    image: '/image/categories/car-care.png',
-  },
-  {
-    title: 'Performance',
-    subtitle: 'Built for power.',
-    link: '/products?category=performance',
-    image: '/images/categories/performance.png',
-  },
-  {
-    title: 'Interior',
-    subtitle: 'Style meets comfort.',
-    link: '/products?category=interior',
-    image: '/images/categories/interior.png',
-  },
-  {
-    title: 'Exterior',
-    subtitle: 'Stand out. Everywhere.',
-    link: '/products?category=exterior',
-    image: '/images/categories/exterior.png',
-  },
-  {
-    title: 'Audio',
-    subtitle: 'Sound that feels fitted.',
-    link: '/products?category=audio',
-    image: '/images/categories/audio.png',
-  },
-]
-
-const scrollByAmount = (direction) => {
-  if (!track.value) return
-
-  track.value.scrollBy({
-    left: direction * 340,
-    behavior: 'smooth',
-  })
-}
+const contentStore = useContentStore()
+const categories = computed(() => contentStore.featuredCategories)
+const scrollByAmount = (direction) => track.value?.scrollBy({ left: direction * 340, behavior: 'smooth' })
+onMounted(() => contentStore.loadStorefrontContent())
 </script>
 
 <template>
@@ -99,8 +56,8 @@ const scrollByAmount = (direction) => {
         >
           <router-link
             v-for="category in categories"
-            :key="category.title"
-            :to="category.link"
+            :key="category.id || category.slug"
+            :to="category.link || `/products?category=${encodeURIComponent(category.name || category.title)}`"
             class="group relative h-[205px] min-w-[285px] overflow-hidden border border-white/10 bg-[#08090b] sm:min-w-[310px] lg:min-w-[295px]"
           >
             <img
@@ -120,7 +77,7 @@ const scrollByAmount = (direction) => {
                 </h3>
 
                 <p class="mt-4 max-w-[9rem] text-sm font-medium leading-6 text-white/55">
-                  {{ category.subtitle }}
+                  {{ category.subtitle || category.description }}
                 </p>
               </div>
 

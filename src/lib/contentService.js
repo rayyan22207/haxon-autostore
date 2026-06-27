@@ -1,12 +1,12 @@
 import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, orderBy, query, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore'
 import { db } from '../firebase/config'
-import { fallbackBrandTiles, fallbackCategoryTiles, fallbackHeroSlides, fallbackSignatureShowcase, fallbackSiteSettings, fallbackTrustItems } from './contentFallbacks'
+import { fallbackAboutPage, fallbackBrandTiles, fallbackCars, fallbackCategoryTiles, fallbackHeroSlides, fallbackSignatureShowcase, fallbackSiteSettings, fallbackTrustItems } from './contentFallbacks'
 import { FALLBACK_IMAGE } from './catalog'
+import { activeSorted, normalizeCar, normalizeCmsCategory } from './cmsUtils'
 
-const collections = ['heroSlides', 'categoryTiles', 'brandTiles', 'trustItems', 'brands', 'catalogs']
-const fallbackMap = { heroSlides: fallbackHeroSlides, categoryTiles: fallbackCategoryTiles, brandTiles: fallbackBrandTiles, trustItems: fallbackTrustItems, brands: [], catalogs: [] }
+const collections = ['heroSlides', 'categoryTiles', 'categories', 'cars', 'brandTiles', 'trustItems', 'brands', 'catalogs']
+const fallbackMap = { heroSlides: fallbackHeroSlides, categoryTiles: fallbackCategoryTiles, categories: fallbackCategoryTiles, cars: fallbackCars, brandTiles: fallbackBrandTiles, trustItems: fallbackTrustItems, brands: [], catalogs: [] }
 const text = (value, fallback = '') => String(value || fallback || '').trim()
-const activeSorted = (items) => items.filter((item) => item.active !== false).sort((a, b) => Number(a.sortOrder || 0) - Number(b.sortOrder || 0))
 const normalizeImage = (value) => text(value, FALLBACK_IMAGE)
 
 export const normalizeHeroSlide = (slide = {}) => ({ ...slide, title: text(slide.title, 'Haxon automotive'), eyebrow: text(slide.eyebrow, 'Haxon select'), subtitle: text(slide.subtitle, 'Premium automotive accessories with fitment support.'), backgroundWord: text(slide.backgroundWord, 'HAXON'), image: normalizeImage(slide.image), imageAlt: text(slide.imageAlt, slide.title || 'Haxon hero'), primaryCtaLabel: text(slide.primaryCtaLabel, 'Shop now'), primaryCtaLink: text(slide.primaryCtaLink, '/products'), secondaryCtaLabel: text(slide.secondaryCtaLabel, 'Fitment help'), secondaryCtaLink: text(slide.secondaryCtaLink, '/contact'), statOneLabel: text(slide.statOneLabel, 'Ready Dispatch'), statOneValue: text(slide.statOneValue, 'Fast'), statTwoLabel: text(slide.statTwoLabel, 'Fitment Checked'), statTwoValue: text(slide.statTwoValue, 'Verified'), statThreeLabel: text(slide.statThreeLabel, 'Premium Imports'), statThreeValue: text(slide.statThreeValue, 'Curated'), sortOrder: Number(slide.sortOrder || 0), active: slide.active !== false })
@@ -20,18 +20,22 @@ export async function fetchStorefrontContent() {
       getDoc(doc(db, 'signatureShowcase', 'main')),
       ...collections.map((name) => getDocs(query(collection(db, name), orderBy('sortOrder', 'asc')))),
     ])
-    const lists = Object.fromEntries(collections.map((name, i) => [name, activeSorted(listSnaps[i].docs.map((d) => ({ id: d.id, ...d.data() }))).map(name === 'heroSlides' ? normalizeHeroSlide : normalizeTile)]))
+    const normalizer = (name) => name === 'heroSlides' ? normalizeHeroSlide : name === 'cars' ? normalizeCar : name === 'categories' ? normalizeCmsCategory : normalizeTile
+    const lists = Object.fromEntries(collections.map((name, i) => [name, activeSorted(listSnaps[i].docs.map((d) => ({ id: d.id, ...d.data() }))).map(normalizer(name))]))
     return {
       siteSettings: settingsSnap.exists() ? { ...fallbackSiteSettings, ...settingsSnap.data() } : fallbackSiteSettings,
       heroSlides: lists.heroSlides.length ? lists.heroSlides : fallbackHeroSlides,
-      categoryTiles: lists.categoryTiles.length ? lists.categoryTiles : fallbackCategoryTiles,
+      categoryTiles: lists.categoryTiles.length ? lists.categoryTiles : (lists.categories.length ? lists.categories : fallbackCategoryTiles),
+      categories: lists.categories.length ? lists.categories : (lists.categoryTiles.length ? lists.categoryTiles : fallbackCategoryTiles),
+      cars: lists.cars.length ? lists.cars : fallbackCars,
       signatureShowcase: signatureSnap.exists() ? normalizeSignature(signatureSnap.data()) : fallbackSignatureShowcase,
+      aboutPage: (await getContentDoc('pages', 'about')) || fallbackAboutPage,
       brandTiles: lists.brandTiles.length ? lists.brandTiles : fallbackBrandTiles,
       trustItems: lists.trustItems.length ? lists.trustItems : fallbackTrustItems,
       usingFallback: false,
     }
   } catch (error) {
-    return { siteSettings: fallbackSiteSettings, heroSlides: fallbackHeroSlides, categoryTiles: fallbackCategoryTiles, signatureShowcase: fallbackSignatureShowcase, brandTiles: fallbackBrandTiles, trustItems: fallbackTrustItems, usingFallback: true }
+    return { siteSettings: fallbackSiteSettings, heroSlides: fallbackHeroSlides, categoryTiles: fallbackCategoryTiles, categories: fallbackCategoryTiles, cars: fallbackCars, aboutPage: fallbackAboutPage, signatureShowcase: fallbackSignatureShowcase, brandTiles: fallbackBrandTiles, trustItems: fallbackTrustItems, usingFallback: true }
   }
 }
 
