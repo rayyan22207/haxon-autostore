@@ -4,7 +4,8 @@ import { fallbackAboutPage, fallbackBrandTiles, fallbackCars, fallbackCategoryTi
 import { FALLBACK_IMAGE } from './catalog'
 import { activeSorted, normalizeCar, normalizeCmsCategory } from './cmsUtils'
 
-export const storefrontCollections = ['heroSlides', 'categoryTiles', 'cars', 'brandTiles', 'trustItems', 'brands', 'catalogs']
+const collections = ['heroSlides', 'categoryTiles', 'categories', 'cars', 'brandTiles', 'trustItems', 'brands', 'catalogs']
+const fallbackMap = { heroSlides: fallbackHeroSlides, categoryTiles: fallbackCategoryTiles, categories: fallbackCategoryTiles, cars: fallbackCars, brandTiles: fallbackBrandTiles, trustItems: fallbackTrustItems, brands: [], catalogs: [] }
 const text = (value, fallback = '') => String(value || fallback || '').trim()
 const normalizeImage = (value) => text(value, FALLBACK_IMAGE)
 const logFirestoreError = (collectionName, operation, error) => console.error(`[Firestore] ${collectionName} ${operation} failed`, { code: error?.code, message: error?.message })
@@ -34,21 +35,22 @@ export async function fetchStorefrontContent() {
       readDoc('aboutPage', 'main'),
       ...storefrontCollections.map(readList),
     ])
-    const mapped = Object.fromEntries(storefrontCollections.map((name, i) => [name, lists[i]]))
+    const normalizer = (name) => name === 'heroSlides' ? normalizeHeroSlide : name === 'cars' ? normalizeCar : name === 'categories' ? normalizeCmsCategory : normalizeTile
+    const lists = Object.fromEntries(collections.map((name, i) => [name, activeSorted(listSnaps[i].docs.map((d) => ({ id: d.id, ...d.data() }))).map(normalizer(name))]))
     return {
-      siteSettings: settings ? { ...fallbackSiteSettings, ...settings } : fallbackSiteSettings,
-      heroSlides: mapped.heroSlides.length ? mapped.heroSlides : fallbackHeroSlides,
-      categoryTiles: mapped.categoryTiles.length ? mapped.categoryTiles : fallbackCategoryTiles,
-      cars: mapped.cars.length ? mapped.cars : fallbackCars,
-      signatureShowcase: signature ? normalizeSignature(signature) : fallbackSignatureShowcase,
-      aboutPage: aboutPage || fallbackAboutPage,
-      brandTiles: mapped.brandTiles.length ? mapped.brandTiles : fallbackBrandTiles,
-      trustItems: mapped.trustItems.length ? mapped.trustItems : fallbackTrustItems,
+      siteSettings: settingsSnap.exists() ? { ...fallbackSiteSettings, ...settingsSnap.data() } : fallbackSiteSettings,
+      heroSlides: lists.heroSlides.length ? lists.heroSlides : fallbackHeroSlides,
+      categoryTiles: lists.categoryTiles.length ? lists.categoryTiles : (lists.categories.length ? lists.categories : fallbackCategoryTiles),
+      categories: lists.categories.length ? lists.categories : (lists.categoryTiles.length ? lists.categoryTiles : fallbackCategoryTiles),
+      cars: lists.cars.length ? lists.cars : fallbackCars,
+      signatureShowcase: signatureSnap.exists() ? normalizeSignature(signatureSnap.data()) : fallbackSignatureShowcase,
+      aboutPage: (await getContentDoc('pages', 'about')) || fallbackAboutPage,
+      brandTiles: lists.brandTiles.length ? lists.brandTiles : fallbackBrandTiles,
+      trustItems: lists.trustItems.length ? lists.trustItems : fallbackTrustItems,
       usingFallback: false,
     }
   } catch (error) {
-    console.error('[Firestore] storefront content load failed; using fallbacks', { code: error?.code, message: error?.message })
-    return { siteSettings: fallbackSiteSettings, heroSlides: fallbackHeroSlides, categoryTiles: fallbackCategoryTiles, cars: fallbackCars, aboutPage: fallbackAboutPage, signatureShowcase: fallbackSignatureShowcase, brandTiles: fallbackBrandTiles, trustItems: fallbackTrustItems, usingFallback: true }
+    return { siteSettings: fallbackSiteSettings, heroSlides: fallbackHeroSlides, categoryTiles: fallbackCategoryTiles, categories: fallbackCategoryTiles, cars: fallbackCars, aboutPage: fallbackAboutPage, signatureShowcase: fallbackSignatureShowcase, brandTiles: fallbackBrandTiles, trustItems: fallbackTrustItems, usingFallback: true }
   }
 }
 

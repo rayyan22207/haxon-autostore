@@ -9,13 +9,14 @@ const managers = [
   { key: 'heroSlides', title: 'Hero Slides', imageField: 'image', fields: ['eyebrow','title','subtitle','backgroundWord','image','imageAlt','primaryCtaLabel','primaryCtaLink','secondaryCtaLabel','secondaryCtaLink','statOneLabel','statOneValue','statTwoLabel','statTwoValue','statThreeLabel','statThreeValue','sortOrder','active'] },
   { key: 'categoryTiles', title: 'Homepage Categories', imageField: 'image', fields: ['title','slug','description','image','imageAlt','link','size','sortOrder','active'] },
   { key: 'cars', title: 'Cars', imageField: 'thumbnail', fields: ['manufacturer','model','slug','heroImage','thumbnail','yearRange','featured','sortOrder','active','description','seoTitle','seoDescription','ogImage','canonicalUrl'] },
-  { key: 'aboutPage', title: 'About Page', fields: ['title','slug','heroEyebrow','heroTitle','heroSubtitle','sectionOneTitle','sectionOneBody','quote','ctaTitle','ctaLabel','ctaLink','sortOrder','active'] },
-  { key: 'brandTiles', title: 'Homepage Brand Bar', imageField: 'image', fields: ['name','slug','logo','image','description','link','sortOrder','active'] },
+  { key: 'categories', title: 'Categories', imageField: 'image', fields: ['name','slug','image','description','icon','featured','active','sortOrder','link','externalUrl'] },
+  { key: 'pages', title: 'About Page', fields: ['title','slug','heroEyebrow','heroTitle','heroSubtitle','sectionOneTitle','sectionOneBody','quote','ctaTitle','ctaLabel','ctaLink','sortOrder','active'] },
+  { key: 'brandTiles', title: 'Homepage Featured Cars' , imageField: 'image', fields: ['name','slug','logo','image','description','link','sortOrder','active'] },
   { key: 'brands', title: 'Product Brands', imageField: 'image', fields: ['name','slug','logo','bannerImage','image','description','website','featured','sortOrder','active'] },
   { key: 'catalogs', title: 'Catalogs', imageField: 'thumbnail', fields: ['name','slug','brand','category','thumbnail','pdfUrl','description','sortOrder','active'] },
   { key: 'trustItems', title: 'Trust Items', fields: ['title','description','icon','sortOrder','active'] },
 ]
-const active = ref('heroSlides'); const loading = ref(false); const saving = ref(false); const uploadProgress = ref(0); const rows = reactive({ heroSlides: [], categoryTiles: [], brandTiles: [], brands: [], catalogs: [], trustItems: [], cars: [], aboutPage: [] })
+const active = ref('heroSlides'); const loading = ref(false); const saving = ref(false); const uploadProgress = ref(0); const rows = reactive({ heroSlides: [], categoryTiles: [], brandTiles: [], brands: [], catalogs: [], trustItems: [], cars: [], categories: [], pages: [] })
 const form = ref({ active: true, sortOrder: 1 }); const editingId = ref(null); const settings = ref({ ...fallbackSiteSettings }); const signature = ref({ ...fallbackSignatureShowcase })
 const current = () => managers.find((m) => m.key === active.value)
 const load = async () => { loading.value = true; try { const [site, showcase] = await Promise.all([getContentDoc('siteSettings', 'general'), getContentDoc('signatureShowcase', 'main')]); if (site) settings.value = { ...fallbackSiteSettings, ...site }; if (showcase) signature.value = { ...fallbackSignatureShowcase, ...showcase }; await Promise.all(managers.map(async (m) => { rows[m.key] = await listContent(m.key) })) } catch(e){ console.error('[Admin CMS] content load failed', { code: e?.code, message: e?.message }); toast.error(e.message || 'Unable to load content') } finally { loading.value = false } }
@@ -38,7 +39,7 @@ const edit = (row) => {
   } : { active: true, sortOrder: 1, ...row }
 }
 const reset = () => { editingId.value = null; form.value = { active: true, sortOrder: rows[active.value]?.length + 1 || 1 } }
-const normalizeSavePayload = () => active.value === 'aboutPage' ? {
+const normalizeSavePayload = () => active.value === 'pages' ? {
   title: form.value.title || 'About Page',
   slug: form.value.slug || 'about',
   hero: { eyebrow: form.value.heroEyebrow, title: form.value.heroTitle || form.value.title, subtitle: form.value.heroSubtitle, backgroundWord: 'MANIFESTO' },
@@ -50,9 +51,9 @@ const normalizeSavePayload = () => active.value === 'aboutPage' ? {
   active: form.value.active !== false,
   sortOrder: Number(form.value.sortOrder || 1),
 } : form.value
-const save = async () => { if (!form.value.title && !form.value.name && !form.value.model) return toast.error('Title, name, or model is required'); saving.value = true; try { await saveContent(active.value, normalizeSavePayload(), active.value === 'aboutPage' ? 'main' : editingId.value); toast.success(editingId.value ? 'Content updated' : 'Content created'); reset(); await load() } catch(e){ console.error('[Admin CMS] content save failed', { collection: active.value, code: e?.code, message: e?.message }); toast.error(e.message || 'Save failed') } finally { saving.value = false } }
-const remove = async (row) => { if (!confirm(`Delete ${row.title || row.name || row.model}?`)) return; try { await deleteContent(active.value, row.id); toast.success('Content deleted'); await load() } catch(e){ console.error('[Admin CMS] content delete failed', { collection: active.value, code: e?.code, message: e?.message }); toast.error('Delete failed') } }
-const archive = async (row) => { try { await saveContent(active.value, { active: false }, row.id); toast.success('Content archived'); await load() } catch(e){ console.error('[Admin CMS] content archive failed', { collection: active.value, code: e?.code, message: e?.message }); toast.error('Archive failed') } }
+const save = async () => { if (!form.value.title && !form.value.name && !form.value.model) return toast.error('Title, name, or model is required'); saving.value = true; try { await saveContent(active.value, normalizeSavePayload(), active.value === 'pages' ? 'about' : editingId.value); toast.success(editingId.value ? 'Content updated' : 'Content created'); reset(); await load() } catch(e){ toast.error(e.message || 'Save failed') } finally { saving.value = false } }
+const remove = async (row) => { if (!confirm(`Delete ${row.title || row.name || row.model}?`)) return; try { await deleteContent(active.value, row.id); toast.success('Content deleted'); await load() } catch(e){ toast.error('Delete failed') } }
+const archive = async (row) => { try { await saveContent(active.value, { active: false }, row.id); toast.success('Content archived'); await load() } catch(e){ toast.error('Archive failed') } }
 const upload = async (event, target = form.value, field = current()?.imageField || 'image') => { const file = event.target.files?.[0]; if (!file) return; uploadProgress.value = 0; try { const image = await uploadContentImage(file, active.value, { onProgress: (value) => { uploadProgress.value = value } }); target[field] = image.url; if (field === 'pdfUrl') target.pdfPath = image.path; else target[`${field}Path`] = image.path; toast.success('File uploaded') } catch(e){ toast.error(e.message || 'Upload failed') } finally { event.target.value = ''; setTimeout(() => { uploadProgress.value = 0 }, 1200) } }
 const saveSettings = async () => { try { await saveSiteSettings(settings.value); toast.success('General settings saved') } catch(e){ toast.error('Settings save failed') } }
 const saveSignature = async () => { try { await saveSignatureShowcase(signature.value); toast.success('Signature showcase saved') } catch(e){ toast.error('Signature save failed') } }
