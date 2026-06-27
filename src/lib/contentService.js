@@ -29,31 +29,71 @@ const readDoc = async (name, id) => {
 
 export async function fetchStorefrontContent() {
   try {
-    const [settings, signature, aboutPage, ...lists] = await Promise.all([
+    const [settings, signature, aboutPage, ...contentLists] = await Promise.all([
       readDoc('siteSettings', 'general'),
       readDoc('signatureShowcase', 'main'),
       readDoc('aboutPage', 'main'),
-      ...storefrontCollections.map(readList),
+      ...collections.map(readList),
     ])
-    const normalizer = (name) => name === 'heroSlides' ? normalizeHeroSlide : name === 'cars' ? normalizeCar : name === 'categories' ? normalizeCmsCategory : normalizeTile
-    const lists = Object.fromEntries(collections.map((name, i) => [name, activeSorted(listSnaps[i].docs.map((d) => ({ id: d.id, ...d.data() }))).map(normalizer(name))]))
+
+    const lists = Object.fromEntries(
+      collections.map((name, i) => [name, contentLists[i] || []])
+    )
+
     return {
-      siteSettings: settingsSnap.exists() ? { ...fallbackSiteSettings, ...settingsSnap.data() } : fallbackSiteSettings,
+      siteSettings: settings ? { ...fallbackSiteSettings, ...settings } : fallbackSiteSettings,
+
       heroSlides: lists.heroSlides.length ? lists.heroSlides : fallbackHeroSlides,
-      categoryTiles: lists.categoryTiles.length ? lists.categoryTiles : (lists.categories.length ? lists.categories : fallbackCategoryTiles),
-      categories: lists.categories.length ? lists.categories : (lists.categoryTiles.length ? lists.categoryTiles : fallbackCategoryTiles),
+
+      categoryTiles: lists.categoryTiles.length
+        ? lists.categoryTiles
+        : lists.categories.length
+          ? lists.categories
+          : fallbackCategoryTiles,
+
+      categories: lists.categories.length
+        ? lists.categories
+        : lists.categoryTiles.length
+          ? lists.categoryTiles
+          : fallbackCategoryTiles,
+
       cars: lists.cars.length ? lists.cars : fallbackCars,
-      signatureShowcase: signatureSnap.exists() ? normalizeSignature(signatureSnap.data()) : fallbackSignatureShowcase,
-      aboutPage: (await getContentDoc('pages', 'about')) || fallbackAboutPage,
+
+      signatureShowcase: signature
+        ? normalizeSignature(signature)
+        : fallbackSignatureShowcase,
+
+      aboutPage: aboutPage
+        ? { ...fallbackAboutPage, ...aboutPage }
+        : fallbackAboutPage,
+
       brandTiles: lists.brandTiles.length ? lists.brandTiles : fallbackBrandTiles,
       trustItems: lists.trustItems.length ? lists.trustItems : fallbackTrustItems,
+
+      brands: lists.brands || [],
+      catalogs: lists.catalogs || [],
+
       usingFallback: false,
     }
   } catch (error) {
-    return { siteSettings: fallbackSiteSettings, heroSlides: fallbackHeroSlides, categoryTiles: fallbackCategoryTiles, categories: fallbackCategoryTiles, cars: fallbackCars, aboutPage: fallbackAboutPage, signatureShowcase: fallbackSignatureShowcase, brandTiles: fallbackBrandTiles, trustItems: fallbackTrustItems, usingFallback: true }
+    console.error('[Firestore] storefront content failed, using fallbacks', error)
+
+    return {
+      siteSettings: fallbackSiteSettings,
+      heroSlides: fallbackHeroSlides,
+      categoryTiles: fallbackCategoryTiles,
+      categories: fallbackCategoryTiles,
+      cars: fallbackCars,
+      aboutPage: fallbackAboutPage,
+      signatureShowcase: fallbackSignatureShowcase,
+      brandTiles: fallbackBrandTiles,
+      trustItems: fallbackTrustItems,
+      brands: [],
+      catalogs: [],
+      usingFallback: true,
+    }
   }
 }
-
 export const getContentDoc = readDoc
 export const listContent = async (name) => readList(name)
 const normalizeContentPayload = (payload = {}) => Object.fromEntries(Object.entries(payload).filter(([key, value]) => !key.endsWith('File') && key !== 'id' && value !== undefined))
