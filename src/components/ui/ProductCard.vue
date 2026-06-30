@@ -13,6 +13,8 @@ const props = defineProps({
 
 const cart = useCartStore()
 
+const productUrl = computed(() => `/products/${props.product.slug || props.product.id}`)
+
 const price = computed(() =>
   Number(props.product.salePrice || props.product.price || 0),
 )
@@ -46,76 +48,69 @@ const addProduct = () => {
 
 <template>
   <article
-    class="group relative overflow-hidden border border-white/10 bg-[#050607] text-white transition duration-300 hover:-translate-y-0.5 hover:border-white/20 hover:bg-[#08090b]"
+    class="group relative overflow-hidden border border-black/10 bg-white text-black transition-all duration-300 hover:-translate-y-1 hover:border-black/20 hover:shadow-[0_18px_45px_rgba(0,0,0,0.08)]"
   >
-    <router-link :to="`/products/${product.id}`" class="block">
-      <div
-        class="relative h-[168px] overflow-hidden border-b border-white/10 bg-[#07080a] sm:h-[178px] lg:h-[188px]"
-      >
+    <router-link :to="productUrl" class="block">
+      <div class="relative h-[190px] overflow-hidden bg-[#f6f6f6] sm:h-[210px] lg:h-[225px]">
         <div
-          class="absolute inset-0 bg-[radial-gradient(circle_at_50%_38%,rgba(255,255,255,0.12),transparent_48%)]"
+          class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(0,0,0,0.06),transparent_45%)]"
         ></div>
 
-        <div
-          class="absolute inset-x-6 bottom-3 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-60"
-        ></div>
-
-        <div class="absolute inset-1 flex items-center justify-center">
-  <HaxonImage :src="productImage(product)" :alt="product.imageAlt || product.name" fit="contain" ratio="h-full w-full" img-class="p-2" />
-</div>
+        <div class="absolute inset-3 flex items-center justify-center">
+          <HaxonImage
+            :src="productImage(product)"
+            :alt="product.imageAlt || product.name"
+            fit="contain"
+            ratio="h-full w-full"
+            img-class="p-3 transition duration-500 group-hover:scale-105"
+          />
+        </div>
 
         <div
           v-if="hasDiscount"
-          class="absolute right-3 top-3 z-20 border border-[#E50914]/50 bg-[#E50914]/20 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.13em] text-white backdrop-blur"
+          class="absolute right-3 top-3 z-20 bg-[#E50914] px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.16em] text-white"
         >
           -{{ discountPercent }}%
         </div>
       </div>
     </router-link>
 
-    <div class="p-3.5 sm:p-4">
-      <p class="text-[10px] font-black uppercase tracking-[0.16em] text-white/42">
+    <div class="p-4 sm:p-5">
+      <p class="text-[10px] font-black uppercase tracking-[0.18em] text-black/40">
         {{ productBrand(product) }}
       </p>
 
-      <router-link :to="`/products/${product.id}`">
+      <router-link :to="productUrl">
         <h3
-          class="mt-2 line-clamp-2 min-h-[2.45rem] text-[15px] font-black leading-tight tracking-[-0.02em] text-white/88 transition group-hover:text-white sm:text-[16px] sm:min-h-[2.65rem]"
+          class="mt-2 line-clamp-2 min-h-[2.65rem] text-[16px] font-black leading-tight tracking-[-0.025em] text-black transition group-hover:text-[#E50914]"
         >
           {{ product.name }}
         </h3>
       </router-link>
 
-      <p class="mt-1.5 line-clamp-1 text-[12px] font-medium text-white/40 sm:text-[13px]">
+      <p class="mt-2 line-clamp-1 text-[13px] font-medium text-black/45">
         {{ subtitle }}
       </p>
 
-      <div class="mt-3.5 flex min-h-[2.6rem] flex-col justify-end">
-        <p
-          v-if="hasDiscount"
-          class="mb-0.5 text-[11px] font-semibold text-white/28 line-through"
-        >
-          {{ formatPrice(oldPrice) }}
-        </p>
+      <div class="mt-5 flex items-end justify-between gap-3">
+        <div>
+          <p
+            v-if="hasDiscount"
+            class="mb-1 text-[12px] font-semibold text-black/30 line-through"
+          >
+            {{ formatPrice(oldPrice) }}
+          </p>
 
-        <p class="text-[16px] font-black tracking-[-0.02em] text-white sm:text-[17px]">
-          {{ formatPrice(price) }}
-        </p>
-      </div>
-
-      <div class="mt-3.5 grid grid-cols-[1fr_40px] gap-2">
-        <router-link
-          :to="`/products/${product.id}`"
-          class="grid h-10 place-items-center border border-white/10 bg-white/[0.025] text-[10px] font-black uppercase tracking-[0.13em] text-white/72 transition hover:border-white/25 hover:bg-white hover:text-black"
-        >
-          View Details
-        </router-link>
+          <p class="text-[18px] font-black tracking-[-0.035em] text-black">
+            {{ formatPrice(price) }}
+          </p>
+        </div>
 
         <button
           type="button"
-          class="grid h-10 place-items-center border border-white/10 bg-white/[0.025] text-white/68 transition hover:border-[#E50914] hover:bg-[#E50914] hover:text-white"
+          class="grid h-11 w-11 place-items-center border border-black/10 bg-black text-white transition hover:border-[#E50914] hover:bg-[#E50914]"
           aria-label="Add to cart"
-          @click="addProduct"
+          @click.prevent="addProduct"
         >
           <svg
             viewBox="0 0 24 24"
@@ -136,7 +131,7 @@ const addProduct = () => {
     </div>
 
     <div
-      class="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[#E50914]/60 to-transparent opacity-0 transition group-hover:opacity-100"
+      class="pointer-events-none absolute inset-x-0 bottom-0 h-[2px] bg-[#E50914] opacity-0 transition duration-300 group-hover:opacity-100"
     ></div>
   </article>
 </template>

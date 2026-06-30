@@ -59,14 +59,24 @@ const discountPercent = computed(() => {
 
 const compatibility = computed(() => {
   const p = product.value || {}
-  if (p.universalFitment || p.compatibilityType === 'universal') return 'Universal fitment'
+
+  if (p.universalFitment || p.compatibilityType === 'universal') {
+    return 'Universal fitment'
+  }
+
   const parts = [
     ...(p.compatibleMakes || []),
     ...(p.compatibleModels || []),
     ...(p.compatibleYears || []),
     ...(p.compatibleVariants || []),
   ]
-  return parts.length ? parts.join(' · ') : (p.fitmentNotes || p.compatibleVehicles || p.carModel || 'Please confirm vehicle year, variant, and trim before dispatch.')
+
+  return parts.length
+    ? parts.join(' · ')
+    : p.fitmentNotes ||
+        p.compatibleVehicles ||
+        p.carModel ||
+        'Please confirm vehicle year, variant, and trim before dispatch.'
 })
 
 const fitment = computed(() =>
@@ -132,33 +142,62 @@ onMounted(async () => {
   }
 
   selected.value = productImage(product.value) || images.value[0]
-  if (product.value) useSeo({ title: product.value.name, description: product.value.shortDescription || product.value.description, image: productImage(product.value), schema: { '@context':'https://schema.org', '@type':'Product', name: product.value.name, brand: productBrand(product.value), image: images.value, description: product.value.description || product.value.shortDescription, sku: product.value.sku, offers: { '@type':'Offer', priceCurrency:'PKR', price: price.value, availability: product.value.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/PreOrder' } } })
+
+  if (product.value) {
+    useSeo({
+      title: product.value.name,
+      description: product.value.shortDescription || product.value.description,
+      image: productImage(product.value),
+      schema: {
+        '@context': 'https://schema.org',
+        '@type': 'Product',
+        name: product.value.name,
+        brand: productBrand(product.value),
+        image: images.value,
+        description: product.value.description || product.value.shortDescription,
+        sku: product.value.sku,
+        offers: {
+          '@type': 'Offer',
+          priceCurrency: 'PKR',
+          price: price.value,
+          availability:
+            product.value.stock > 0
+              ? 'https://schema.org/InStock'
+              : 'https://schema.org/PreOrder',
+        },
+      },
+    })
+  }
 })
 </script>
 
 <template>
-  <main class="min-h-screen bg-black pt-[74px] text-white">
-    <section v-if="product" class="mx-auto max-w-[1500px] px-5 py-8 sm:px-8 lg:px-12">
+  <main class="min-h-screen bg-[#f4f4f2] pt-[74px] text-black">
+    <section
+      v-if="product"
+      class="mx-auto max-w-[1500px] px-5 py-8 sm:px-8 lg:px-12"
+    >
       <router-link
         to="/products"
-        class="inline-flex items-center gap-3 text-[11px] font-black uppercase tracking-[0.18em] text-white/45 transition hover:text-white"
+        class="inline-flex items-center gap-3 text-[11px] font-black uppercase tracking-[0.18em] text-black/45 transition hover:text-black"
       >
         ← Back to collection
       </router-link>
 
-      <div class="mt-7 grid gap-8 lg:grid-cols-[minmax(0,1.06fr)_minmax(420px,0.94fr)]">
+      <div class="mt-7 grid gap-8 lg:grid-cols-[minmax(0,1.08fr)_minmax(410px,0.92fr)]">
         <div class="min-w-0">
-          <div class="relative overflow-hidden border border-white/10 bg-[#050607]">
-            <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_36%,rgba(255,255,255,0.12),transparent_48%)]"></div>
-
-            <p
-              class="pointer-events-none absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 text-[clamp(6rem,14vw,14rem)] font-black uppercase leading-none tracking-[-0.08em] text-white/[0.025] md:block"
-            >
-              Detail
-            </p>
-
+          <div class="relative overflow-hidden bg-[#e9e9e6]">
             <div class="relative flex aspect-square items-center justify-center">
-              <Transition name="fade" mode="out-in"><HaxonImage :key="selected" :src="selected || images[0]" :alt="product.imageAlt || product.name" fit="contain" ratio="h-[92%] w-[92%]" /></Transition>
+              <Transition name="fade" mode="out-in">
+                <HaxonImage
+                  :key="selected"
+                  :src="selected || images[0]"
+                  :alt="product.imageAlt || product.name"
+                  fit="contain"
+                  ratio="h-[90%] w-[90%]"
+                  img-class="p-4"
+                />
+              </Transition>
             </div>
           </div>
 
@@ -170,68 +209,80 @@ onMounted(async () => {
               v-for="image in images"
               :key="image"
               type="button"
-              class="group relative aspect-square overflow-hidden border bg-[#050607] transition"
-              :class="selected === image ? 'border-[#E50914]' : 'border-white/10 hover:border-white/25'"
+              class="group relative aspect-square overflow-hidden border bg-[#e9e9e6] transition"
+              :class="
+                selected === image
+                  ? 'border-[#E50914]'
+                  : 'border-black/10 hover:border-black/30'
+              "
               @click="selected = image"
             >
-              <HaxonImage :src="image" :alt="product.imageAlt || product.name" fit="contain" ratio="h-full w-full" img-class="p-2 opacity-80 group-hover:opacity-100" />
+              <HaxonImage
+                :src="image"
+                :alt="product.imageAlt || product.name"
+                fit="contain"
+                ratio="h-full w-full"
+                img-class="p-2 opacity-80 transition group-hover:opacity-100"
+              />
             </button>
           </div>
         </div>
 
-        <aside class="self-start border border-white/10 bg-[#050607] lg:sticky lg:top-24">
-          <div class="border-b border-white/10 p-6 sm:p-7">
-            <p class="text-[11px] font-black uppercase tracking-[0.22em] text-white/45">
+        <aside class="self-start bg-white lg:sticky lg:top-24">
+          <div class="p-6 sm:p-8">
+            <p class="text-[10px] font-black uppercase tracking-[0.24em] text-black/45">
               {{ productBrand(product) }} · {{ product.category || 'Accessory' }}
             </p>
 
-            <h1 class="mt-4 text-[clamp(2.2rem,4vw,4.7rem)] font-black leading-[0.95] tracking-[-0.055em]">
+            <h1 class="mt-4 text-[clamp(2.3rem,4vw,4.8rem)] font-black leading-[0.92] tracking-[-0.065em] text-black">
               {{ product.name }}
             </h1>
 
             <div class="mt-5 flex flex-wrap gap-2">
-              <span
-                class="border border-white/10 bg-white/[0.035] px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em] text-white/65"
-              >
+              <span class="border border-black/10 bg-black/[0.025] px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em] text-black/60">
                 {{ productMode(product) }}
               </span>
 
               <span
                 v-if="product.stock !== undefined"
-                class="border border-white/10 bg-white/[0.035] px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em] text-white/65"
+                class="border border-black/10 bg-black/[0.025] px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em] text-black/60"
               >
                 Stock {{ product.stock }}
               </span>
 
               <span
                 v-if="hasDiscount"
-                class="border border-[#E50914]/50 bg-[#E50914]/15 px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em] text-white"
+                class="bg-[#E50914] px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em] text-white"
               >
                 {{ discountPercent }}% Off
               </span>
             </div>
 
-            <div class="mt-7">
+            <div class="mt-8">
               <p
                 v-if="hasDiscount"
-                class="mb-1 text-sm font-semibold text-white/30 line-through"
+                class="mb-1 text-sm font-semibold text-black/30 line-through"
               >
                 {{ formatPrice(oldPrice) }}
               </p>
 
-              <p class="text-4xl font-black tracking-[-0.05em]">
+              <p class="text-4xl font-black tracking-[-0.055em] text-black">
                 {{ formatPrice(price) }}
               </p>
             </div>
 
-            <p class="mt-6 text-base leading-7 text-white/52">
-              {{ product.shortDescription || product.description || 'Premium automotive accessory curated by Haxon Autostore.' }}
+            <p class="mt-6 text-base leading-8 text-black/55">
+              {{
+                product.shortDescription ||
+                product.description ||
+                'Premium automotive accessory curated by Haxon Autostore.'
+              }}
             </p>
 
-            <div class="mt-8 grid gap-3 sm:grid-cols-[1fr_auto]">
+            <div class="mt-8">
               <button
                 type="button"
-                class="h-12 bg-white px-7 text-[11px] font-black uppercase tracking-[0.18em] text-black transition hover:bg-[#E50914] hover:text-white"
+                class="h-13 w-full bg-black px-7 py-4 text-[11px] font-black uppercase tracking-[0.18em] text-white transition hover:bg-[#E50914]"
                 @click="addProduct"
               >
                 Add to cart
@@ -240,121 +291,220 @@ onMounted(async () => {
               <a
                 :href="whatsapp"
                 target="_blank"
-                class="grid h-12 place-items-center border border-white/10 px-7 text-[11px] font-black uppercase tracking-[0.18em] text-white/72 transition hover:border-white/25 hover:text-white"
+                class="mt-5 inline-flex text-[11px] font-black uppercase tracking-[0.18em] text-black/50 transition hover:text-[#E50914]"
               >
-                Confirm fitment
+                Need fitment help? WhatsApp us →
               </a>
             </div>
           </div>
 
-          <div class="divide-y divide-white/10">
-            <div class="p-6 sm:p-7">
-              <p class="text-[11px] font-black uppercase tracking-[0.2em] text-white/45">
-                Fitment
-              </p>
+          <div class="border-t border-black/10 px-6 py-6 sm:px-8">
+            <p class="text-[10px] font-black uppercase tracking-[0.22em] text-[#E50914]">
+              Fitment
+            </p>
 
-              <p class="mt-3 text-sm leading-7 text-white/55">
-                {{ fitment }}
-              </p>
-            </div>
+            <p class="mt-3 text-sm leading-7 text-black/55">
+              {{ fitment }}
+            </p>
+          </div>
 
-            <div class="p-6 sm:p-7">
-              <p class="text-[11px] font-black uppercase tracking-[0.2em] text-white/45">
-                Specifications
-              </p>
+          <div class="border-t border-black/10 px-6 py-6 sm:px-8">
+            <p class="text-[10px] font-black uppercase tracking-[0.22em] text-[#E50914]">
+              Specifications
+            </p>
 
+            <div
+              v-if="specifications.length"
+              class="mt-4 grid gap-3"
+            >
               <div
-                v-if="specifications.length"
-                class="mt-4 grid gap-3"
+                v-for="spec in specifications"
+                :key="spec.label"
+                class="grid grid-cols-[0.8fr_1fr] gap-4 border-b border-black/10 pb-3 last:border-b-0 last:pb-0"
               >
-                <div
-                  v-for="spec in specifications"
-                  :key="spec.label"
-                  class="grid grid-cols-[0.8fr_1fr] gap-4 border-b border-white/10 pb-3 last:border-b-0 last:pb-0"
-                >
-                  <p class="text-xs font-black uppercase tracking-[0.14em] text-white/35">
-                    {{ spec.label }}
-                  </p>
+                <p class="text-xs font-black uppercase tracking-[0.14em] text-black/35">
+                  {{ spec.label }}
+                </p>
 
-                  <p class="text-sm text-white/62">
-                    {{ spec.value }}
-                  </p>
-                </div>
+                <p class="text-sm text-black/62">
+                  {{ spec.value }}
+                </p>
               </div>
+            </div>
 
-              <p
-                v-else
-                class="mt-3 text-sm leading-7 text-white/45"
-              >
-                Specifications will be confirmed by Haxon support.
+            <p
+              v-else
+              class="mt-3 text-sm leading-7 text-black/45"
+            >
+              Specifications will be confirmed by Haxon support.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-3 divide-x divide-black/10 border-t border-black/10">
+            <div class="p-5">
+              <p class="text-[10px] font-black uppercase tracking-[0.15em] text-black/72">
+                Curated
+              </p>
+              <p class="mt-2 text-xs text-black/38">
+                Selected stock
               </p>
             </div>
 
-            <div class="grid grid-cols-3 divide-x divide-white/10">
-              <div class="p-5">
-                <p class="text-[10px] font-black uppercase tracking-[0.15em] text-white/72">
-                  Curated
-                </p>
-                <p class="mt-2 text-xs text-white/38">
-                  Selected stock
-                </p>
-              </div>
+            <div class="p-5">
+              <p class="text-[10px] font-black uppercase tracking-[0.15em] text-black/72">
+                Checked
+              </p>
+              <p class="mt-2 text-xs text-black/38">
+                Fitment first
+              </p>
+            </div>
 
-              <div class="p-5">
-                <p class="text-[10px] font-black uppercase tracking-[0.15em] text-white/72">
-                  Checked
-                </p>
-                <p class="mt-2 text-xs text-white/38">
-                  Fitment first
-                </p>
-              </div>
-
-              <div class="p-5">
-                <p class="text-[10px] font-black uppercase tracking-[0.15em] text-white/72">
-                  Support
-                </p>
-                <p class="mt-2 text-xs text-white/38">
-                  WhatsApp help
-                </p>
-              </div>
+            <div class="p-5">
+              <p class="text-[10px] font-black uppercase tracking-[0.15em] text-black/72">
+                Support
+              </p>
+              <p class="mt-2 text-xs text-black/38">
+                WhatsApp help
+              </p>
             </div>
           </div>
         </aside>
       </div>
 
-      <section class="mt-12 grid gap-4 lg:grid-cols-2">
-        <div class="border border-white/10 bg-[#050607] p-6">
-          <p class="text-[11px] font-black uppercase tracking-[0.2em] text-white/45">Description</p>
-          <p class="mt-4 whitespace-pre-line text-sm leading-7 text-white/58">{{ product.description || product.shortDescription || 'Full product details will be added soon.' }}</p>
-        </div>
-        <div v-if="product.features?.length" class="border border-white/10 bg-[#050607] p-6">
-          <p class="text-[11px] font-black uppercase tracking-[0.2em] text-white/45">Features</p>
-          <ul class="mt-4 grid gap-3 text-sm text-white/58"><li v-for="feature in product.features" :key="feature">• {{ feature }}</li></ul>
-        </div>
-        <div class="border border-white/10 bg-[#050607] p-6">
-          <p class="text-[11px] font-black uppercase tracking-[0.2em] text-white/45">Compatibility</p>
-          <p class="mt-4 text-sm leading-7 text-white/58">{{ compatibility }}</p>
-        </div>
-        <div v-if="product.installationNotes || product.warranty || product.shippingInformation" class="border border-white/10 bg-[#050607] p-6">
-          <p class="text-[11px] font-black uppercase tracking-[0.2em] text-white/45">Installation, Warranty & Shipping</p>
-          <div class="mt-4 space-y-3 text-sm leading-7 text-white/58"><p v-if="product.installationNotes"><b>Installation:</b> {{ product.installationNotes }}</p><p v-if="product.warranty"><b>Warranty:</b> {{ product.warranty }}</p><p v-if="product.shippingInformation"><b>Shipping:</b> {{ product.shippingInformation }}</p></div>
-        </div>
-        <div v-if="product.packageContents?.length || product.downloads?.length || product.youtubeVideo" class="border border-white/10 bg-[#050607] p-6 lg:col-span-2">
-          <p class="text-[11px] font-black uppercase tracking-[0.2em] text-white/45">Resources</p>
-          <ul v-if="product.packageContents?.length" class="mt-4 grid gap-2 text-sm text-white/58"><li v-for="item in product.packageContents" :key="item">Package: {{ item }}</li></ul>
-          <div v-if="product.downloads?.length" class="mt-4 flex flex-wrap gap-3"><a v-for="file in product.downloads" :key="file.url || file.label" :href="file.url" target="_blank" class="border border-white/10 px-4 py-2 text-xs font-bold uppercase text-white/70">{{ file.label || 'Download' }}</a></div>
-          <a v-if="product.youtubeVideo" :href="product.youtubeVideo" target="_blank" class="mt-4 inline-flex text-sm text-red-300">Watch installation video →</a>
-        </div>
-        <div v-if="product.faqs?.length" class="border border-white/10 bg-[#050607] p-6 lg:col-span-2">
-          <p class="text-[11px] font-black uppercase tracking-[0.2em] text-white/45">FAQs</p>
-          <details v-for="faq in product.faqs" :key="faq.question" class="mt-4 border-t border-white/10 pt-4"><summary class="cursor-pointer font-bold text-white/75">{{ faq.question }}</summary><p class="mt-3 text-sm text-white/55">{{ faq.answer }}</p></details>
-        </div>
-      </section>
-
-      <section v-if="related.length" class="mt-16 border-t border-white/10 pt-9">
-        <div class="mb-7 flex items-end justify-between gap-4">
+      <!-- <section class="mt-14 bg-white px-6 py-8 sm:px-8 lg:px-10">
+        <div class="grid gap-10 lg:grid-cols-2">
           <div>
-            <p class="text-[11px] font-black uppercase tracking-[0.22em] text-white/40">
+            <p class="text-[10px] font-black uppercase tracking-[0.22em] text-[#E50914]">
+              Description
+            </p>
+
+            <p class="mt-4 whitespace-pre-line text-sm leading-8 text-black/58">
+              {{ product.description || product.shortDescription || 'Full product details will be added soon.' }}
+            </p>
+          </div>
+
+          <div v-if="product.features?.length">
+            <p class="text-[10px] font-black uppercase tracking-[0.22em] text-[#E50914]">
+              Features
+            </p>
+
+            <ul class="mt-4 grid gap-3 text-sm leading-7 text-black/58">
+              <li
+                v-for="feature in product.features"
+                :key="feature"
+              >
+                — {{ feature }}
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <p class="text-[10px] font-black uppercase tracking-[0.22em] text-[#E50914]">
+              Compatibility
+            </p>
+
+            <p class="mt-4 text-sm leading-8 text-black/58">
+              {{ compatibility }}
+            </p>
+          </div>
+
+          <div v-if="product.installationNotes || product.warranty || product.shippingInformation">
+            <p class="text-[10px] font-black uppercase tracking-[0.22em] text-[#E50914]">
+              Installation, Warranty & Shipping
+            </p>
+
+            <div class="mt-4 space-y-3 text-sm leading-8 text-black/58">
+              <p v-if="product.installationNotes">
+                <b class="text-black">Installation:</b> {{ product.installationNotes }}
+              </p>
+
+              <p v-if="product.warranty">
+                <b class="text-black">Warranty:</b> {{ product.warranty }}
+              </p>
+
+              <p v-if="product.shippingInformation">
+                <b class="text-black">Shipping:</b> {{ product.shippingInformation }}
+              </p>
+            </div>
+          </div>
+
+          <div
+            v-if="product.packageContents?.length || product.downloads?.length || product.youtubeVideo"
+            class="lg:col-span-2 border-t border-black/10 pt-8"
+          >
+            <p class="text-[10px] font-black uppercase tracking-[0.22em] text-[#E50914]">
+              Resources
+            </p>
+
+            <ul
+              v-if="product.packageContents?.length"
+              class="mt-4 grid gap-2 text-sm text-black/58"
+            >
+              <li
+                v-for="item in product.packageContents"
+                :key="item"
+              >
+                Package: {{ item }}
+              </li>
+            </ul>
+
+            <div
+              v-if="product.downloads?.length"
+              class="mt-4 flex flex-wrap gap-3"
+            >
+              <a
+                v-for="file in product.downloads"
+                :key="file.url || file.label"
+                :href="file.url"
+                target="_blank"
+                class="border border-black/10 px-4 py-2 text-xs font-bold uppercase text-black/65 transition hover:border-[#E50914] hover:text-[#E50914]"
+              >
+                {{ file.label || 'Download' }}
+              </a>
+            </div>
+
+            <a
+              v-if="product.youtubeVideo"
+              :href="product.youtubeVideo"
+              target="_blank"
+              class="mt-4 inline-flex text-sm font-semibold text-[#E50914]"
+            >
+              Watch installation video →
+            </a>
+          </div>
+
+          <div
+            v-if="product.faqs?.length"
+            class="lg:col-span-2 border-t border-black/10 pt-8"
+          >
+            <p class="text-[10px] font-black uppercase tracking-[0.22em] text-[#E50914]">
+              FAQs
+            </p>
+
+            <details
+              v-for="faq in product.faqs"
+              :key="faq.question"
+              class="mt-4 border-t border-black/10 pt-4"
+            >
+              <summary class="cursor-pointer font-bold text-black/75">
+                {{ faq.question }}
+              </summary>
+
+              <p class="mt-3 text-sm text-black/55">
+                {{ faq.answer }}
+              </p>
+            </details>
+          </div>
+        </div>
+      </section> -->
+
+      <section
+        v-if="related.length"
+        class="mt-16 bg-black px-5 py-12 text-white sm:px-8 lg:px-12"
+      >
+        <div class="mb-8 flex items-end justify-between gap-4">
+          <div>
+            <p class="text-[10px] font-black uppercase tracking-[0.24em] text-white/40">
               Continue browsing
             </p>
 
@@ -385,24 +535,32 @@ onMounted(async () => {
       v-else
       class="mx-auto max-w-[1500px] px-5 py-24 text-center sm:px-8 lg:px-12"
     >
-      <p class="text-[11px] font-black uppercase tracking-[0.22em] text-white/40">
+      <p class="text-[10px] font-black uppercase tracking-[0.22em] text-[#E50914]">
         Product not found
       </p>
 
-      <h1 class="mt-4 text-4xl font-black tracking-[-0.05em]">
+      <h1 class="mt-4 text-4xl font-black tracking-[-0.05em] text-black">
         This product does not exist.
       </h1>
 
       <router-link
         to="/products"
-        class="mt-8 inline-flex h-12 items-center border border-white/10 px-7 text-[11px] font-black uppercase tracking-[0.18em] text-white/70 transition hover:bg-white hover:text-black"
+        class="mt-8 inline-flex h-12 items-center bg-black px-7 text-[11px] font-black uppercase tracking-[0.18em] text-white transition hover:bg-[#E50914]"
       >
         Back to products
       </router-link>
     </section>
   </main>
 </template>
+
 <style scoped>
-.fade-enter-active,.fade-leave-active{transition:opacity .2s ease}
-.fade-enter-from,.fade-leave-to{opacity:0}
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
 </style>

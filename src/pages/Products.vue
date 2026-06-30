@@ -25,7 +25,7 @@ watch(() => route.query, applyCarFilters)
 </script>
 
 <template>
-  <main class="bg-black">
+  <main class="bg-white text-black">
     <ProductBanner />
 
     <section class="pb-16">
