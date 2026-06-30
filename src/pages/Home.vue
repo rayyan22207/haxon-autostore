@@ -20,10 +20,11 @@ onMounted(() => {
   <main class="storefront-page bg-black">
     <CinematicHero />
     <CategorySlider />
-    <CarFitmentSlider />
-    <HaxonStandardSection />
-    <BrandBar />
     <FeaturedCollectionSlider />
-    <TrustBar />
+    
+    <HaxonStandardSection />
+    <!-- <BrandBar /> -->
+    <CarFitmentSlider />
+    <!-- <TrustBar /> -->
   </main>
 </template>

@@ -3,13 +3,88 @@ import { computed, onMounted, ref } from 'vue'
 import { useContentStore } from '../../stores/contentStore'
 import { useProductStore } from '../../stores/productStore'
 import { countProductsForCar } from '../../lib/cmsUtils'
+
 const track = ref(null)
-const contentStore = useContentStore(); const productStore = useProductStore()
-const cars = computed(() => contentStore.featuredCars.map((car) => ({ ...car, products: `${countProductsForCar(productStore.products, car)} Products` })))
-const scrollCars = (direction) => track.value?.scrollBy({ left: direction * 320, behavior: 'smooth' })
-onMounted(() => { contentStore.loadStorefrontContent(); productStore.fetchProducts() })
+
+const contentStore = useContentStore()
+const productStore = useProductStore()
+
+const cars = computed(() =>
+  contentStore.featuredCars.map((car) => ({
+    ...car,
+    products: `${countProductsForCar(productStore.products, car)} Products`,
+    link:
+      car.link ||
+      `/products?make=${encodeURIComponent(car.manufacturer || car.make || '')}&model=${encodeURIComponent(car.model || car.name || '')}`,
+  })),
+)
+
+onMounted(() => {
+  contentStore.loadStorefrontContent()
+  productStore.fetchProducts()
+})
 </script>
+
 <template>
-  <section class="relative overflow-hidden bg-black py-10 text-white"><div class="mx-auto max-w-[1500px] px-5 sm:px-8 lg:px-12"><div class="relative grid overflow-hidden border border-white/10 bg-[#050607] lg:grid-cols-[290px_1fr]"><div class="relative z-10 flex min-h-[330px] flex-col justify-between border-b border-white/10 p-7 sm:p-8 lg:border-b-0 lg:border-r"><div><div class="mb-4 h-1 w-5 bg-[#E50914]"></div><h2 class="text-3xl font-black uppercase tracking-[-0.04em]">Shop By Car</h2><p class="mt-6 max-w-[13rem] text-sm font-medium leading-7 text-white/55">Find the perfect accessories for your ride.</p></div><router-link to="/cars" class="group inline-flex h-12 w-fit items-center gap-5 border border-white/15 bg-white/[0.02] px-5 text-[11px] font-black uppercase tracking-[0.16em] text-white/70 transition hover:border-[#E50914] hover:text-white">View All Cars <span class="text-lg transition group-hover:translate-x-1">→</span></router-link></div><div class="relative min-w-0"><div ref="track" class="car-fitment-track flex overflow-x-auto scroll-smooth"><router-link v-for="car in cars" :key="car.id || car.slug" :to="car.link" class="group relative min-h-[330px] min-w-[245px] border-r border-white/10 bg-[#08090b] p-5 transition hover:bg-white/[0.045] sm:min-w-[270px]"><div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_10%,rgba(255,255,255,0.08),transparent_42%)] opacity-0 transition group-hover:opacity-100"></div><div class="relative flex h-full flex-col"><div class="flex h-[145px] items-center justify-center"><img :src="car.thumbnail || car.heroImage" :alt="`${car.manufacturer} ${car.model}`" class="max-h-[125px] w-full object-contain opacity-85 transition duration-500 group-hover:scale-105 group-hover:opacity-100" /></div><div class="mt-auto"><p class="text-[11px] font-black uppercase tracking-[0.12em] text-white/65">{{ car.manufacturer }}</p><h3 class="mt-3 text-xl font-black uppercase leading-tight tracking-[-0.03em]">{{ car.model }}</h3><p class="mt-4 text-[11px] font-black uppercase tracking-[0.12em] text-white/42">{{ car.products }}</p><p class="mt-6 inline-flex items-center gap-4 text-[11px] font-black uppercase tracking-[0.16em] text-white/72 transition group-hover:text-white">View Products <span class="text-lg transition group-hover:translate-x-1">→</span></p></div></div></router-link></div><div class="absolute right-4 top-1/2 z-20 hidden -translate-y-1/2 gap-2 lg:flex"><button class="grid h-10 w-10 place-items-center border border-white/10 bg-black/70 text-xl text-white/55 backdrop-blur-xl transition hover:border-white/25 hover:text-white" aria-label="Scroll cars left" @click="scrollCars(-1)">‹</button><button class="grid h-10 w-10 place-items-center border border-white/10 bg-black/70 text-xl text-white/55 backdrop-blur-xl transition hover:border-white/25 hover:text-white" aria-label="Scroll cars right" @click="scrollCars(1)">›</button></div></div></div></div></section>
+  <section class="relative overflow-hidden bg-black text-white">
+    <div class="flex items-center justify-between px-5 pb-4 pt-8 sm:px-8 lg:px-12">
+      <div>
+        <p class="text-[10px] font-black uppercase tracking-[0.28em] text-white/45">
+          Built for your drive
+        </p>
+
+        <h2 class="mt-2 text-xl font-black uppercase tracking-[-0.03em] text-white sm:text-2xl">
+          Shop By Car
+        </h2>
+      </div>
+
+      <router-link
+        to="/cars"
+        class="group hidden items-center gap-3 text-[10px] font-black uppercase tracking-[0.18em] text-white/55 transition hover:text-white sm:inline-flex"
+      >
+        View All Vehicles
+        <span class="text-[#E50914] transition group-hover:translate-x-1">→</span>
+      </router-link>
+    </div>
+
+    <div
+      ref="track"
+      class="car-fitment-track flex overflow-x-auto scroll-smooth px-5 pb-8 sm:px-8 lg:px-12"
+    >
+      <router-link
+        v-for="car in cars"
+        :key="car.id || car.slug"
+        :to="car.link"
+        class="group relative min-w-[190px] px-3 py-4 transition sm:min-w-[230px] lg:min-w-[245px]"
+      >
+        <div class="flex h-[105px] items-center justify-center">
+          <img
+            :src="car.thumbnail || car.heroImage"
+            :alt="`${car.manufacturer} ${car.model}`"
+            class="max-h-[95px] w-full object-contain opacity-85 transition duration-500 group-hover:scale-105 group-hover:opacity-100"
+          />
+        </div>
+
+        <div class="mt-3">
+          <p class="text-[10px] font-black uppercase tracking-[0.18em] text-white/45">
+            {{ car.manufacturer }}
+          </p>
+
+          <h3 class="mt-1 text-sm font-black uppercase tracking-[-0.02em] text-white">
+            {{ car.model }}
+          </h3>
+        </div>
+      </router-link>
+    </div>
+  </section>
 </template>
-<style scoped>.car-fitment-track{scrollbar-width:none}.car-fitment-track::-webkit-scrollbar{display:none}</style>
+
+<style scoped>
+.car-fitment-track {
+  scrollbar-width: none;
+}
+
+.car-fitment-track::-webkit-scrollbar {
+  display: none;
+}
+</style>
